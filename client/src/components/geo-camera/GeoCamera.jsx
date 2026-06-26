@@ -24,7 +24,7 @@ const GeoCamera = ({ onCapture, label = 'Evidence Photo' }) => {
   const isMobileBrowser = typeof navigator !== 'undefined' && /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
   // Initialize camera and location
-  const startCamera = async (mode = cameraMode) => {
+  const startCamera = async (mode = cameraMode, deviceId = selectedDeviceId) => {
     try {
       setCameraError(null);
       setCapturedPhoto(null);
@@ -32,11 +32,12 @@ const GeoCamera = ({ onCapture, label = 'Evidence Photo' }) => {
       const videoConstraints = {
         width: { ideal: 1280 },
         height: { ideal: 720 },
-        facingMode: mode,
       };
 
-      if (selectedDeviceId) {
-        videoConstraints.deviceId = { exact: selectedDeviceId };
+      if (isMobileBrowser) {
+        videoConstraints.facingMode = { exact: mode };
+      } else if (deviceId) {
+        videoConstraints.deviceId = { exact: deviceId };
       }
 
       const constraints = { video: videoConstraints, audio: false };
@@ -80,8 +81,8 @@ const GeoCamera = ({ onCapture, label = 'Evidence Photo' }) => {
       const list = await navigator.mediaDevices.enumerateDevices();
       const videoInputs = list.filter((d) => d.kind === 'videoinput');
       setDevices(videoInputs);
-      // If no selection yet, pick the first device
-      if (videoInputs.length > 0 && !selectedDeviceId) {
+      // If no selection yet, pick the first device (only on desktop)
+      if (videoInputs.length > 0 && !selectedDeviceId && !isMobileBrowser) {
         setSelectedDeviceId(videoInputs[0].deviceId || '');
       }
     } catch (err) {
@@ -102,10 +103,22 @@ const GeoCamera = ({ onCapture, label = 'Evidence Photo' }) => {
   };
 
   const switchCamera = async () => {
-    const nextMode = cameraMode === 'environment' ? 'user' : 'environment';
-    stopCamera();
-    setCameraMode(nextMode);
-    await startCamera(nextMode);
+    if (isMobileBrowser) {
+      const nextMode = cameraMode === 'environment' ? 'user' : 'environment';
+      stopCamera();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      setCameraMode(nextMode);
+      await startCamera(nextMode, '');
+    } else if (devices.length > 1) {
+      const currentIndex = devices.findIndex((d) => d.deviceId === selectedDeviceId);
+      const nextIndex = (currentIndex + 1) % devices.length;
+      const nextDevice = devices[nextIndex];
+      stopCamera();
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      const nextDeviceId = nextDevice.deviceId || '';
+      setSelectedDeviceId(nextDeviceId);
+      await startCamera(cameraMode, nextDeviceId);
+    }
   };
 
   useEffect(() => {
@@ -338,9 +351,11 @@ const GeoCamera = ({ onCapture, label = 'Evidence Photo' }) => {
             <Button variant="outline" size="sm" onClick={stopCamera} className="flex-1">
               Cancel
             </Button>
-            <Button variant="outline" size="sm" onClick={switchCamera} className="flex-1" disabled={geoLoading || uploading}>
-              Switch Camera
-            </Button>
+            {!isMobileBrowser && (
+              <Button variant="outline" size="sm" onClick={switchCamera} className="flex-1" disabled={geoLoading || uploading}>
+                Switch Camera
+              </Button>
+            )}
             <Button
               size="sm"
               onClick={capturePhoto}
