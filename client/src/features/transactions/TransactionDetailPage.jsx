@@ -1266,7 +1266,7 @@ const TransactionDetailPage = () => {
               {barcodes.filter(b => b.history.some(h => h.action.toLowerCase().includes('transfer'))).length === 0 ? (
                 <p className="text-xs text-slate-500 py-6 text-center">No internal barcode transfers have occurred in this challan.</p>
               ) : (
-                barcodes.map(bc => (
+                barcodes.filter(b => b.history.some(h => h.action.toLowerCase().includes('transfer'))).map(bc => (
                   <div key={bc.barcode} className="p-4 border border-slate-105 bg-white dark:bg-slate-950 rounded-xl">
                     <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400">{bc.barcode}</span>
                     <div className="mt-2 pl-3 border-l border-slate-200 dark:border-slate-800 flex flex-col gap-2.5">

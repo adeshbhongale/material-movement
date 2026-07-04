@@ -88,7 +88,7 @@ const barcodeSchema = new mongoose.Schema(
       {
         name: String,
         url: String,
-        type: String,
+        type: { type: String },
         size: Number,
         uploadedAt: { type: Date, default: Date.now },
       },

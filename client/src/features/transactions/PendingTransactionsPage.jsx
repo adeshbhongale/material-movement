@@ -482,9 +482,13 @@ const PendingTransactionsPage = () => {
       }
       await api.post('/barcodes/handle-transfer', payload);
       alert(`Transfer request ${action}ed successfully.`);
+      const targetTxnId = selectedItem?.transactionId;
       setActionRemarks('');
       setSelectedItem(null);
       fetchApprovals();
+      if (action === 'accept' && targetTxnId) {
+        navigate(`/transactions/${targetTxnId}`);
+      }
     } catch (err) {
       setActionError(err.response?.data?.message || 'Failed to update barcode transfer.');
     } finally {
@@ -509,10 +513,14 @@ const PendingTransactionsPage = () => {
         materialName: approveMaterialName.trim() || selectedItem.materialName
       });
       alert('Split request approved and new material created!');
+      const targetTxnId = selectedItem?.transactionId;
       setApproveNewBarcode('');
       setApproveMaterialName('');
       setSelectedItem(null);
       fetchApprovals();
+      if (targetTxnId) {
+        navigate(`/transactions/${targetTxnId}`);
+      }
     } catch (err) {
       setActionError(err.response?.data?.message || 'Failed to approve split request.');
     } finally {
@@ -572,8 +580,12 @@ const PendingTransactionsPage = () => {
     try {
       await api.put(`/barcodes/return/${selectedItem._id}/accept`);
       alert('Return request accepted successfully!');
+      const targetTxnId = selectedItem?.transactionId;
       setSelectedItem(null);
       fetchApprovals();
+      if (targetTxnId) {
+        navigate(`/transactions/${targetTxnId}`);
+      }
     } catch (err) {
       setActionError(err.response?.data?.message || 'Failed to accept return request.');
     } finally {
@@ -590,9 +602,13 @@ const PendingTransactionsPage = () => {
         remarks: actionRemarks || `Return marked as ${actionType}ed`
       });
       alert(`Return request marked as ${actionType}ed successfully!`);
+      const targetTxnId = selectedItem?.transactionId;
       setActionRemarks('');
       setSelectedItem(null);
       fetchApprovals();
+      if (targetTxnId) {
+        navigate(`/transactions/${targetTxnId}`);
+      }
     } catch (err) {
       setActionError(err.response?.data?.message || `Failed to perform handler action: ${actionType}`);
     } finally {
@@ -644,7 +660,7 @@ const PendingTransactionsPage = () => {
         const targetId = selectedItem._id;
         setSelectedItem(null);
         fetchApprovals();
-        navigate(`/transactions/${targetId}/receive`);
+        navigate(`/transactions/${targetId}`);
       } catch (err) {
         alert(err.response?.data?.message || 'Direct dispatch failed.');
       } finally {
@@ -664,7 +680,7 @@ const PendingTransactionsPage = () => {
       alert('In transit status logged.');
       setSelectedItem(null);
       fetchApprovals();
-      navigate(`/transactions/${txnId}/receive`);
+      navigate(`/transactions/${txnId}`);
     } catch (err) {
       alert(err.response?.data?.message || 'Confirm dispatch failed.');
     } finally {
@@ -1456,7 +1472,7 @@ const PendingTransactionsPage = () => {
                                 const isStore = activeRole.role === 'super_admin' || (activeRole.role === 'department_admin' && activeRole.adminType === 'store');
                                 const isSimplified = selectedItem.materials?.every(m => !m.barcodes || m.barcodes.length === 0);
                                 if (isStore && isSimplified) {
-                                  handleOpenDispatchModal(selectedItem);
+                                  navigate(`/store-dispatch/${selectedItem.transactionId}`);
                                 } else {
                                   handleApproveReject('approve', selectedItem._id);
                                 }

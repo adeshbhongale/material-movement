@@ -398,6 +398,29 @@ const seedAll = async () => {
         owner: bc.owner,
         ownerDepartment: bc.ownerDept,
         transferCount: bc.barcode.startsWith('PC1200') || bc.barcode === 'EN120031' ? 1 : 0,
+        gps: {
+          lat: 18.5204,
+          lng: 73.8567,
+          address: 'Pune, Maharashtra, India'
+        },
+        photos: [
+          {
+            url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
+            capturedAt: new Date('2026-06-12T12:00:00Z'),
+            lat: 18.5204,
+            lng: 73.8567,
+            address: 'Pune, Maharashtra, India'
+          }
+        ],
+        documents: [
+          {
+            name: 'Material_Inspection_Report.pdf',
+            url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            type: 'pdf',
+            size: 10240,
+            uploadedAt: new Date('2026-06-12T12:00:00Z')
+          }
+        ],
         createdAt: new Date('2026-06-10T09:00:00Z'),
         ownershipHistory: [
           { user: emp3._id, department: depts['Service']._id, action: 'received', remarks: 'Initial recipient' },
@@ -413,7 +436,13 @@ const seedAll = async () => {
           { action: 'Dispatched', user: handler._id, timestamp: new Date('2026-06-12T10:00:00Z') },
           { action: 'Received', user: emp3._id, remarks: 'GPS & Photo Captured', timestamp: new Date('2026-06-12T12:00:00Z'), gps: { lat: 18.5204, lng: 73.8567, address: 'Pune, Maharashtra, India' } },
           ...(bc.owner.toString() !== emp3._id.toString()
-            ? [{ action: 'Transferred', user: emp3._id, remarks: 'Transferred to R&D Engineer', timestamp: new Date('2026-06-14T09:00:00Z') }]
+            ? [
+                { action: 'Transfer Initiated', user: emp3._id, remarks: `Transfer initiated to ${rndEng.fullName} (pending Management approval)`, timestamp: new Date('2026-06-13T09:00:00Z') },
+                { action: 'Transfer Pending Management Approval', user: emp3._id, remarks: 'Awaiting management review/approval', timestamp: new Date('2026-06-13T09:05:00Z') },
+                { action: 'Transfer Approved by Management', user: management._id, remarks: 'Management approved transfer request', timestamp: new Date('2026-06-14T09:00:00Z') },
+                { action: 'Transfer Pending Acceptance', user: rndEng._id, remarks: 'Employee request pending recipient acceptance', timestamp: new Date('2026-06-14T09:05:00Z') },
+                { action: 'Transfer Accepted', user: rndEng._id, remarks: 'Transfer accepted', timestamp: new Date('2026-06-14T10:00:00Z') }
+              ]
             : []),
           ...(bc.status === 'Returned'
             ? [{ action: 'Returned to Store', user: emp3._id, remarks: 'Returned to store', timestamp: new Date('2026-06-15T10:00:00Z') }]
@@ -522,6 +551,29 @@ const seedAll = async () => {
         barcode: bc, transactionId: txn2.transactionId, transaction: txn2._id,
         materialName: bc.startsWith('SN') ? 'Sensor' : 'Cable Set',
         status: 'Returned', owner: store._id, ownerDepartment: depts['Stores']._id,
+        gps: {
+          lat: 18.5204,
+          lng: 73.8567,
+          address: 'Pune, Maharashtra, India'
+        },
+        photos: [
+          {
+            url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
+            capturedAt: new Date('2026-06-12T12:00:00Z'),
+            lat: 18.5204,
+            lng: 73.8567,
+            address: 'Pune, Maharashtra, India'
+          }
+        ],
+        documents: [
+          {
+            name: 'Material_Inspection_Report.pdf',
+            url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            type: 'pdf',
+            size: 10240,
+            uploadedAt: new Date('2026-06-12T12:00:00Z')
+          }
+        ],
         createdAt: new Date('2026-06-18T10:00:00Z'),
         ownershipHistory: [
           { user: emp3._id, department: depts['Service']._id, action: 'received', remarks: 'Initial recipient' },
@@ -634,6 +686,29 @@ const seedAll = async () => {
         barcode: bc, transactionId: txn5.transactionId, transaction: txn5._id,
         materialName: bc.startsWith('BR') ? 'Bearing 6205' : 'Coupling',
         status: 'Active', owner: emp2._id, ownerDepartment: depts['Production']._id,
+        gps: {
+          lat: 18.5204,
+          lng: 73.8567,
+          address: 'Pune, Maharashtra, India'
+        },
+        photos: [
+          {
+            url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&q=80',
+            capturedAt: new Date('2026-06-12T12:00:00Z'),
+            lat: 18.5204,
+            lng: 73.8567,
+            address: 'Pune, Maharashtra, India'
+          }
+        ],
+        documents: [
+          {
+            name: 'Material_Inspection_Report.pdf',
+            url: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+            type: 'pdf',
+            size: 10240,
+            uploadedAt: new Date('2026-06-12T12:00:00Z')
+          }
+        ],
         createdAt: new Date('2026-06-30T08:30:00Z'),
         history: [{ action: 'Request Created', user: emp2._id, timestamp: new Date('2026-06-30T08:30:00Z') }],
       });

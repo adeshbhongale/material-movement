@@ -19,7 +19,8 @@ const createNotification = async (userId, type, title, message, transactionId, b
 exports.getBarcodeDetail = async (req, res) => {
   try {
     const { barcode } = req.params;
-    const bc = await Barcode.findOne({ barcode })
+    const normalizedBarcode = barcode ? barcode.trim().toUpperCase() : '';
+    const bc = await Barcode.findOne({ barcode: normalizedBarcode })
       .populate('owner', 'fullName employeeId department designation')
       .populate('ownerDepartment', 'name')
       .populate('history.user', 'fullName employeeId')
@@ -39,12 +40,12 @@ exports.getBarcodeDetail = async (req, res) => {
     }
 
     // Get related transfers and returns
-    const transfers = await Transfer.find({ barcode })
+    const transfers = await Transfer.find({ barcode: normalizedBarcode })
       .populate('fromUser', 'fullName employeeId')
       .populate('toUser', 'fullName employeeId')
       .sort({ createdAt: -1 });
 
-    const returns = await Return.find({ barcode })
+    const returns = await Return.find({ barcode: normalizedBarcode })
       .populate('fromUser', 'fullName employeeId')
       .populate('returnHandler', 'fullName employeeId')
       .sort({ createdAt: -1 });
@@ -78,8 +79,9 @@ exports.getBarcodesByTransaction = async (req, res) => {
 exports.transferBarcode = async (req, res) => {
   try {
     const { barcode, toUserId, remarks, requiresApproval, gps, photos } = req.body;
+    const normalizedBarcode = barcode ? barcode.trim().toUpperCase() : '';
 
-    const bc = await Barcode.findOne({ barcode }).populate('owner');
+    const bc = await Barcode.findOne({ barcode: normalizedBarcode }).populate('owner');
     if (!bc) return res.status(404).json({ message: 'Barcode not found.' });
     if (bc.status !== 'Active') return res.status(400).json({ message: 'Barcode is not active.' });
     if (bc.owner._id.toString() !== req.user._id.toString() && req.user.role !== 'super_admin') {
@@ -117,6 +119,21 @@ exports.transferBarcode = async (req, res) => {
         ? `Transfer initiated to ${toUser.fullName} (pending Management approval)`
         : `Transfer initiated to ${toUser.fullName} (pending recipient acceptance)`,
     });
+    if (isCrossDept) {
+      bc.history.push({
+        action: 'Transfer Pending Management Approval',
+        user: req.user._id,
+        remarks: 'Awaiting management review/approval',
+        timestamp: new Date()
+      });
+    } else {
+      bc.history.push({
+        action: 'Transfer Pending Acceptance',
+        user: toUserId,
+        remarks: 'Employee request pending recipient acceptance',
+        timestamp: new Date()
+      });
+    }
     await bc.save();
 
     await createNotification(
@@ -160,6 +177,23 @@ exports.handleTransfer = async (req, res) => {
         transfer.approvedBy = req.user._id;
         transfer.approvedAt = new Date();
         await transfer.save();
+
+        const bc = await Barcode.findOne({ barcode: transfer.barcode });
+        if (bc) {
+          bc.history.push({
+            action: 'Transfer Approved by Management',
+            user: req.user._id,
+            remarks: 'Management approved transfer request',
+            timestamp: new Date()
+          });
+          bc.history.push({
+            action: 'Transfer Pending Acceptance',
+            user: transfer.toUser,
+            remarks: 'Employee request pending recipient acceptance',
+            timestamp: new Date()
+          });
+          await bc.save();
+        }
 
         await createNotification(
           transfer.toUser,
@@ -280,8 +314,9 @@ exports.handleTransfer = async (req, res) => {
 exports.returnBarcode = async (req, res) => {
   try {
     const { barcode, reason, condition, remarks, gps, photos, returnHandler } = req.body;
+    const normalizedBarcode = barcode ? barcode.trim().toUpperCase() : '';
 
-    const bc = await Barcode.findOne({ barcode });
+    const bc = await Barcode.findOne({ barcode: normalizedBarcode });
     if (!bc) return res.status(404).json({ message: 'Barcode not found.' });
     if (bc.status !== 'Active') return res.status(400).json({ message: 'Barcode is not active.' });
 
@@ -481,7 +516,8 @@ exports.createSplitRequest = async (req, res) => {
       return res.status(400).json({ message: 'Barcode and reason are required.' });
     }
 
-    const bc = await Barcode.findOne({ barcode });
+    const normalizedBarcode = barcode ? barcode.trim().toUpperCase() : '';
+    const bc = await Barcode.findOne({ barcode: normalizedBarcode });
     if (!bc) return res.status(404).json({ message: 'Barcode not found.' });
     if (bc.status !== 'Active') return res.status(400).json({ message: 'Barcode is not active.' });
 
@@ -581,7 +617,8 @@ exports.approveSplitRequest = async (req, res) => {
     }
 
     // Check if newBarcode already exists
-    const existingBc = await Barcode.findOne({ barcode: newBarcode });
+    const normalizedNewBarcode = newBarcode ? newBarcode.trim().toUpperCase() : '';
+    const existingBc = await Barcode.findOne({ barcode: normalizedNewBarcode });
     if (existingBc) {
       return res.status(400).json({ message: `Barcode ${newBarcode} already exists.` });
     }
@@ -698,8 +735,9 @@ exports.approveSplitRequest = async (req, res) => {
 exports.acceptSplitMaterial = async (req, res) => {
   try {
     const { barcode, gps, photos } = req.body;
+    const normalizedBarcode = barcode ? barcode.trim().toUpperCase() : '';
 
-    const bc = await Barcode.findOne({ barcode });
+    const bc = await Barcode.findOne({ barcode: normalizedBarcode });
     if (!bc) return res.status(404).json({ message: 'Barcode not found.' });
     if (bc.status !== 'pending_acceptance') {
       return res.status(400).json({ message: 'Barcode is not pending acceptance.' });

@@ -318,12 +318,8 @@ export default function BarcodeDetail() {
                   <span className="text-[10px] text-blue-650 hover:underline font-bold cursor-pointer">View All</span>
                 </div>
                 <div className="flex gap-3">
-                  {bc.photos?.length === 0 ? (
-                    mockPhotos.map((url, i) => (
-                      <div key={i} className="w-28 h-28 bg-slate-50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden flex items-center justify-center shadow-xs">
-                        <img src={url} alt={`Fallback Mock ${i + 1}`} className="w-full h-full object-cover" />
-                      </div>
-                    ))
+                  {!bc.photos || bc.photos.length === 0 ? (
+                    <p className="text-xs text-slate-400 italic mt-1">No photos uploaded</p>
                   ) : (
                     bc.photos.map((p, i) => (
                       <div key={i} className="w-28 h-28 bg-slate-50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800 rounded-2xl overflow-hidden flex items-center justify-center shadow-xs">
@@ -337,12 +333,18 @@ export default function BarcodeDetail() {
               {/* Location (GPS) Panel */}
               <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col gap-2">
                 <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider pb-2 border-b border-slate-50 dark:border-slate-800/60">Location (GPS)</h4>
-                <p className="font-mono text-xs text-slate-800 dark:text-slate-200 font-bold mt-1">
-                  {bc.gps ? `${bc.gps.lat.toFixed(4)}° N, ${bc.gps.lng.toFixed(4)}° E` : '18.5204° N, 73.8567° E'}
-                </p>
-                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">
-                  {bc.gps?.address || 'Pune, Maharashtra, India'}
-                </p>
+                {bc.gps ? (
+                  <>
+                    <p className="font-mono text-xs text-slate-800 dark:text-slate-200 font-bold mt-1">
+                      {bc.gps.lat.toFixed(4)}° N, {bc.gps.lng.toFixed(4)}° E
+                    </p>
+                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">
+                      {bc.gps.address}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-xs text-slate-400 italic mt-1">No location data</p>
+                )}
               </div>
 
               {/* Remarks Panel */}

@@ -144,7 +144,7 @@ const transactionSchema = new mongoose.Schema(
       {
         name: String,
         url: String,
-        type: String,
+        type: { type: String },
         size: Number,
         uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
         uploadedAt: { type: Date, default: Date.now },
