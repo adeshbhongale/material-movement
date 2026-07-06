@@ -10,9 +10,11 @@ const closeRequestSchema = new mongoose.Schema(
     requester: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     status: {
       type: String,
-      enum: ['pending', 'approved', 'rejected'],
+      enum: ['pending', 'pending_accounts_approval', 'pending_store_acceptance', 'approved', 'rejected'],
       default: 'pending',
     },
+    managementApprover: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    invoiceUrl: { type: String },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     approvedAt: { type: Date },
     rejectionReason: { type: String, default: '' },

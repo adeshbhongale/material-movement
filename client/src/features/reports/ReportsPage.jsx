@@ -1,4 +1,4 @@
-import { ArrowRight, Calendar, DollarSign, FileSpreadsheet, FileText, Filter, RefreshCw, Eye, Tag } from 'lucide-react';
+import { ArrowRight, Calendar, DollarSign, FileSpreadsheet, FileText, Filter, RefreshCw, Tag } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Badge from '../../components/ui/Badge';
@@ -142,6 +142,61 @@ const ReportsPage = () => {
   const isAdmin = ['super_admin', 'admin'].includes(user?.role);
 
   const getColumns = () => {
+    if (reportType === 'conversions') {
+      return [
+        {
+          header: 'Transaction ID',
+          cell: (row) => <span className="font-bold text-indigo-600 dark:text-indigo-400">{row.transactionId}</span>,
+        },
+        {
+          header: 'Barcode',
+          cell: (row) => <span className="font-mono font-bold text-blue-600 dark:text-blue-400">{row.barcode}</span>,
+        },
+        {
+          header: 'Material Name',
+          cell: (row) => <span className="font-semibold text-slate-800 dark:text-slate-200">{row.materialName || 'N/A'}</span>,
+        },
+        {
+          header: 'Type',
+          cell: (row) => (
+            <Badge variant={row.documentType === 'Invoice' ? 'primary' : 'success'}>
+              {row.documentType}
+            </Badge>
+          ),
+        },
+        {
+          header: 'Doc Number',
+          cell: (row) => <span className="font-bold text-slate-700 dark:text-slate-350">{row.documentNumber}</span>,
+        },
+        {
+          header: 'Requester',
+          cell: (row) => (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-905 dark:text-slate-100">{row.requester?.fullName}</span>
+              <span className="text-[10px] text-slate-400 font-medium">ID: {row.requester?.employeeId}</span>
+            </div>
+          ),
+        },
+        {
+          header: 'Approved By',
+          cell: (row) => (
+            <div className="flex flex-col">
+              <span className="font-semibold text-slate-905 dark:text-slate-100">{row.approvedBy?.fullName || 'N/A'}</span>
+              {row.approvedBy && <span className="text-[10px] text-slate-400 font-medium">ID: {row.approvedBy.employeeId}</span>}
+            </div>
+          ),
+        },
+        {
+          header: 'Closed Date',
+          cell: (row) => (
+            <span className="text-xs text-slate-505 font-medium">
+              {row.approvedAt ? new Date(row.approvedAt).toLocaleDateString() : 'N/A'}
+            </span>
+          ),
+        }
+      ];
+    }
+
     if (reportType === 'returns') {
       return [
         {
@@ -250,20 +305,6 @@ const ReportsPage = () => {
           header: 'Status',
           cell: (row) => <Badge>{row.status}</Badge>,
         },
-        {
-          header: 'Actions',
-          cell: (row) => (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => navigate(row.isExternal ? `/receiving/${row._id}` : `/transactions/${row._id}`)}
-              className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-              title="View Details"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
-          ),
-        },
       ];
     }    return [
       {
@@ -355,24 +396,20 @@ const ReportsPage = () => {
         header: 'Status',
         cell: (row) => <Badge>{row.status}</Badge>,
       },
-      {
-        header: 'Actions',
-        cell: (row) => (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => navigate(row.isExternal ? `/receiving/${row._id}` : `/transactions/${row._id}`)}
-            className="p-1.5 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-            title="View Details"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-        ),
-      },
     ];
   };
 
   const getKpiLabels = () => {
+    if (reportType === 'conversions') {
+      return {
+        title1: 'Total Closed/Converted Barcodes',
+        value1: `${summary.totalTransactions} items`,
+        title2: 'Invoice Conversions',
+        value2: `${summary.totalValue} items`,
+        title3: 'DC Conversions',
+        value3: `${summary.avgValue} items`,
+      };
+    }
     if (reportType === 'returns') {
       return {
         title1: 'Returns Count',
@@ -466,6 +503,16 @@ const ReportsPage = () => {
         >
           Returns Report
         </button>
+        <button
+          onClick={() => { setReportType('conversions'); setCurrentPage(1); }}
+          className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${
+            reportType === 'conversions'
+              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+          }`}
+        >
+          DC & Invoice Conversions
+        </button>
       </div>
 
       {/* Summary KPI Cards */}
@@ -537,40 +584,50 @@ const ReportsPage = () => {
       >
         <div className={`${showMobileFilters ? 'grid' : 'hidden md:grid'} grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end`}>
           
-          <div>
-            <Select
-              id="status"
-              label="Status"
-              placeholder="All Statuses"
-              options={[
-                { label: 'Draft', value: 'draft' },
-                { label: 'Pending Approval', value: 'submitted' },
-                { label: 'TL Approved', value: 'tl_approved' },
-                { label: 'Mgt Approved', value: 'mgt_approved' },
-                { label: 'Store Accepted', value: 'store_accepted' },
-                { label: 'Handler Assigned', value: 'handler_assigned' },
-                { label: 'Dispatched', value: 'dispatched' },
-                { label: 'Received', value: 'received' },
-                { label: 'Completed', value: 'completed' },
-                { label: 'Rejected', value: 'rejected' }
-              ]}
-              value={status}
-              onChange={(e) => { setStatus(e.target.value); setCurrentPage(1); }}
-              className="[&_select]:py-1.5 [&_select]:text-xs [&_label]:text-[10px] [&_select]:h-9"
-            />
-          </div>
+          {reportType !== 'conversions' && (
+            <div>
+              <Select
+                id="status"
+                label="Status"
+                placeholder="All Statuses"
+                options={[
+                  { label: 'Draft', value: 'draft' },
+                  { label: 'Pending Approval', value: 'submitted' },
+                  { label: 'TL Approved', value: 'tl_approved' },
+                  { label: 'Mgt Approved', value: 'mgt_approved' },
+                  { label: 'Store Accepted', value: 'store_accepted' },
+                  { label: 'Handler Assigned', value: 'handler_assigned' },
+                  { label: 'Dispatched', value: 'dispatched' },
+                  { label: 'Received', value: 'received' },
+                  { label: 'Completed', value: 'completed' },
+                  { label: 'Rejected', value: 'rejected' }
+                ]}
+                value={status}
+                onChange={(e) => { setStatus(e.target.value); setCurrentPage(1); }}
+                className="[&_select]:py-1.5 [&_select]:text-xs [&_label]:text-[10px] [&_select]:h-9"
+              />
+            </div>
+          )}
 
           <div>
             <Select
               id="docType"
               label="Doc Type"
               placeholder="All Doc Types"
-              options={[
-                { label: 'Delivery Challan (DC)', value: 'DC' },
-                { label: 'Returnable DC (RDC)', value: 'RDC' },
-                { label: 'Invoice', value: 'Invoice' },
-                { label: 'Emergency Send', value: 'Emergency Send' }
-              ]}
+              options={
+                reportType === 'conversions'
+                  ? [
+                      { label: 'DC Internal', value: 'DC Internal' },
+                      { label: 'DC FOC', value: 'DC FOC' },
+                      { label: 'Invoice', value: 'Invoice' }
+                    ]
+                  : [
+                      { label: 'Delivery Challan (DC)', value: 'DC' },
+                      { label: 'Returnable DC (RDC)', value: 'RDC' },
+                      { label: 'Invoice', value: 'Invoice' },
+                      { label: 'Emergency Send', value: 'Emergency Send' }
+                    ]
+              }
               value={docType}
               onChange={(e) => { setDocType(e.target.value); setCurrentPage(1); }}
               className="[&_select]:py-1.5 [&_select]:text-xs [&_label]:text-[10px] [&_select]:h-9"
@@ -744,6 +801,15 @@ const ReportsPage = () => {
         totalPages={totalPages}
         onPageChange={(page) => setCurrentPage(page)}
         emptyMessage="No material movement dossiers found matching the query rules."
+        onRowClick={(row) => {
+          if (reportType === 'conversions') {
+            navigate(`/barcodes/${row.barcode}`);
+          } else if (reportType === 'returns') {
+            navigate(`/transactions/${row.transactionId}`);
+          } else {
+            navigate(row.isExternal ? `/receiving/${row._id}` : `/transactions/${row._id}`);
+          }
+        }}
       />
     </div>
   );

@@ -35,7 +35,7 @@ const CreateTransactionPage = () => {
       try {
         const response = await api.get('/employees?role=department_admin&allDepartments=true&limit=100');
         const admins = response.data.data || [];
-        setMgtApprovers(admins.filter(a => a.departmentAdminType === 'management').map(emp => ({ value: emp._id, label: `${emp.fullName} (${emp.employeeId})` })));
+        setMgtApprovers(admins.filter(a => a.departmentAdminType === 'management' && a._id !== user?._id && a.role !== 'super_admin').map(emp => ({ value: emp._id, label: `${emp.fullName} (${emp.employeeId})` })));
       } catch (err) {
         console.error('Error fetching management routing users:', err);
       }

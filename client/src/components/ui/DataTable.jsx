@@ -10,6 +10,7 @@ const DataTable = ({
   totalPages = 1,
   onPageChange,
   actions,
+  onRowClick,
 }) => {
   return (
     <div className="flex flex-col w-full">
@@ -49,7 +50,8 @@ const DataTable = ({
               data.map((row, rowIdx) => (
                 <tr
                   key={row._id || rowIdx}
-                  className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-700 dark:text-slate-200"
+                  className={`hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-slate-700 dark:text-slate-200 ${onRowClick ? 'cursor-pointer' : ''}`}
+                  onClick={() => onRowClick && onRowClick(row)}
                 >
                   {columns.map((col, colIdx) => (
                     <td
@@ -82,7 +84,8 @@ const DataTable = ({
           data.map((row, rowIdx) => (
             <div
               key={row._id || rowIdx}
-              className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm"
+              className={`bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-4 flex flex-col gap-3 shadow-sm ${onRowClick ? 'cursor-pointer' : ''}`}
+              onClick={() => onRowClick && onRowClick(row)}
             >
               {columns.map((col, colIdx) => (
                 <div

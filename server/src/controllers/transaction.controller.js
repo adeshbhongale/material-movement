@@ -294,26 +294,51 @@ exports.getTransactions = async (req, res) => {
       ];
     }
 
-    const total = await Transaction.countDocuments(filter);
-    const transactions = await Transaction.find(filter)
+    const allTransactions = await Transaction.find(filter)
       .populate('requester', 'fullName employeeId email')
       .populate('department', 'name')
       .populate('teamLead', 'fullName employeeId')
       .populate('handler', 'fullName employeeId')
       .populate('managementApprover', 'fullName employeeId')
       .populate('store', 'fullName employeeId')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(parseInt(limit));
+      .sort({ createdAt: -1 });
+
+    let filteredTransactions = allTransactions.filter(txn => txn.status !== 'closed');
+    if (req.user.role === 'employee') {
+      const txnIds = filteredTransactions.map(t => t.transactionId);
+      const barcodesForTxns = await Barcode.find({ transactionId: { $in: txnIds } });
+      const activePostDispatch = ['dispatched', 'received', 'active', 'partially_returned', 'closed', 'completed'];
+
+      filteredTransactions = filteredTransactions.filter(txn => {
+        const isRequester = (txn.requester?._id || txn.requester)?.toString() === req.user._id.toString();
+        if (isRequester) {
+          return true;
+        }
+        if (activePostDispatch.includes(txn.status)) {
+          const txnBarcodes = barcodesForTxns.filter(b => b.transactionId === txn.transactionId);
+          const hasActiveMaterial = txnBarcodes.some(b => 
+            (b.owner?._id || b.owner)?.toString() === req.user._id.toString() &&
+            ['Active', 'pending_acceptance'].includes(b.status)
+          );
+          if (!hasActiveMaterial) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
+    const totalFiltered = filteredTransactions.length;
+    const paginatedTransactions = filteredTransactions.slice((page - 1) * limit, page * limit);
 
     res.json({
-      data: transactions, // Added for frontend compatibility
-      transactions,
+      data: paginatedTransactions, // Added for frontend compatibility
+      transactions: paginatedTransactions,
       pagination: {
-        total,
+        total: totalFiltered,
         page: parseInt(page),
         limit: parseInt(limit),
-        pages: Math.ceil(total / limit),
+        pages: Math.ceil(totalFiltered / limit),
       },
     });
   } catch (error) {
@@ -347,7 +372,10 @@ exports.getTransaction = async (req, res) => {
     // Get barcodes for this transaction
     const barcodes = await Barcode.find({ transactionId: transaction.transactionId })
       .populate('owner', 'fullName employeeId department')
-      .populate('ownerDepartment', 'name');
+      .populate('ownerDepartment', 'name')
+      .populate('history.user', 'fullName employeeId')
+      .populate('closeRequest.managementApprover', 'fullName employeeId')
+      .populate('closeRequest.requester', 'fullName employeeId');
 
     // Get return requests for this transaction
     const ReturnModel = require('../models/Return');
@@ -355,9 +383,37 @@ exports.getTransaction = async (req, res) => {
       .populate('fromUser', 'fullName employeeId')
       .populate('returnHandler', 'fullName employeeId');
 
+    // Calculate chatLocked dynamically for the current user
+    let dynamicChatLocked = transaction.chatLocked;
+    const isTeamLead = (transaction.teamLead?._id || transaction.teamLead)?.toString() === req.user._id.toString();
+    if (req.user.role === 'employee' && !isTeamLead) {
+      const activePostDispatch = ['dispatched', 'received', 'active', 'partially_returned', 'closed', 'completed'];
+      if (activePostDispatch.includes(transaction.status)) {
+        const hasActiveMaterial = barcodes.some(b => 
+          (b.owner?._id || b.owner)?.toString() === req.user._id.toString() &&
+          ['Active', 'pending_acceptance'].includes(b.status)
+        );
+
+        const hasActiveReturnAssignment = returns.some(r => 
+          (r.returnHandler?._id || r.returnHandler)?.toString() === req.user._id.toString() &&
+          r.status !== 'completed'
+        );
+
+        const isPendingDispatchHandler = (transaction.handler?._id || transaction.handler)?.toString() === req.user._id.toString() &&
+          ['store_accepted', 'handler_assigned'].includes(transaction.status);
+
+        if (!hasActiveMaterial && !hasActiveReturnAssignment && !isPendingDispatchHandler) {
+          dynamicChatLocked = true;
+        }
+      }
+    }
+
+    const transactionObj = transaction.toObject();
+    transactionObj.chatLocked = dynamicChatLocked;
+
     res.json({
-      data: transaction, // Added for frontend compatibility
-      transaction,
+      data: transactionObj,
+      transaction: transactionObj,
       barcodes,
       returns
     });
@@ -459,7 +515,7 @@ exports.approveTransaction = async (req, res) => {
 };
 
 /**
- * Reject transaction
+ * Reject transaction — reverts to previous approval phase
  */
 exports.rejectTransaction = async (req, res) => {
   try {
@@ -476,7 +532,19 @@ exports.rejectTransaction = async (req, res) => {
       return res.status(404).json({ message: 'Transaction not found.' });
     }
 
-    transaction.status = 'rejected';
+    // Determine previous status based on current status
+    const previousStatusMap = {
+      'submitted': 'submitted',        // TL rejects → back to submitted (requester can edit/resubmit)
+      'tl_approved': 'submitted',      // Management rejects → back to submitted
+      'mgt_approved': 'tl_approved',   // Store rejects → back to tl_approved
+      'store_accepted': 'mgt_approved', // Rejection at store accepted → back to mgt_approved
+      'handler_assigned': 'store_accepted', // Handler decline handled separately but as fallback
+      'dispatched': 'handler_assigned',
+    };
+
+    const previousStatus = previousStatusMap[transaction.status] || 'submitted';
+
+    transaction.status = previousStatus;
     transaction.rejectionReason = reason;
     transaction.approvalChain.push({
       user: req.user._id,
@@ -484,7 +552,7 @@ exports.rejectTransaction = async (req, res) => {
       action: 'rejected',
       remarks: reason,
     });
-    addTimeline(transaction, 'Request Rejected', `Rejected by ${req.user.fullName}: ${reason}`, req.user._id);
+    addTimeline(transaction, 'Request Rejected', `Rejected by ${req.user.fullName}: ${reason}. Reverted to ${previousStatus.replace(/_/g, ' ')} stage.`, req.user._id);
 
     await transaction.save();
 
@@ -492,7 +560,7 @@ exports.rejectTransaction = async (req, res) => {
       transaction.requester,
       'request_rejected',
       'Request Rejected',
-      `Your request ${transaction.transactionId} was rejected: ${reason}`,
+      `Your request ${transaction.transactionId} was rejected by ${req.user.fullName}: ${reason}. It has been reverted for re-review.`,
       transaction.transactionId
     );
 
@@ -502,10 +570,10 @@ exports.rejectTransaction = async (req, res) => {
       entityId: transaction.transactionId,
       user: req.user._id,
       userName: req.user.fullName,
-      description: `Rejected transaction ${transaction.transactionId}: ${reason}`,
+      description: `Rejected transaction ${transaction.transactionId}: ${reason}. Status reverted from ${transaction.status} to ${previousStatus}.`,
     });
 
-    res.json({ message: 'Transaction rejected.', transaction });
+    res.json({ message: `Transaction rejected and reverted to ${previousStatus.replace(/_/g, ' ')} stage.`, transaction });
   } catch (error) {
     res.status(500).json({ message: 'Server error.' });
   }
@@ -766,7 +834,8 @@ exports.handlerAction = async (req, res) => {
 
     // Authorize: Only the handler, store admin, or super_admin can confirm dispatch
     const isStoreAdmin = req.user.role === 'department_admin' && req.user.departmentAdminType === 'store';
-    const isAssignedHandler = transaction.handler && transaction.handler.toString() === req.user._id.toString();
+    const handlerId = transaction.handler?._id || transaction.handler;
+    const isAssignedHandler = handlerId && handlerId.toString() === req.user._id.toString();
     if (req.user.role !== 'super_admin' && !isStoreAdmin && !isAssignedHandler) {
       return res.status(403).json({ message: 'You are not authorized to perform handler actions for this transaction.' });
     }
@@ -939,17 +1008,17 @@ exports.rejectReceipt = async (req, res) => {
       return res.status(400).json({ message: 'Rejection reason is required.' });
     }
 
-    // Set transaction status to 'rejected'
-    transaction.status = 'rejected';
+    // Revert transaction status to previous phase (dispatched)
+    transaction.status = 'dispatched';
     transaction.rejectionReason = reason;
 
-    addTimeline(transaction, 'Receipt Rejected', `Material receipt rejected by requester. Reason: ${reason}`, req.user._id);
+    addTimeline(transaction, 'Receipt Rejected', `Material receipt rejected by requester. Reason: ${reason}. Status reverted to dispatched.`, req.user._id);
     await transaction.save();
 
-    // Set all barcodes associated with this transaction to 'Closed' (so they can't be used)
+    // Revert barcode statuses back to pending_acceptance
     await Barcode.updateMany(
       { transactionId: transaction.transactionId },
-      { status: 'Closed' }
+      { status: 'pending_acceptance' }
     );
 
     // Write to audit log
@@ -959,10 +1028,10 @@ exports.rejectReceipt = async (req, res) => {
       entityId: transaction.transactionId,
       user: req.user._id,
       userName: req.user.fullName,
-      description: `Requester rejected material receipt. Reason: ${reason}`,
+      description: `Requester rejected material receipt. Reason: ${reason}. Status reverted to dispatched.`,
     });
 
-    res.json({ message: 'Material receipt rejected and transaction closed.', transaction });
+    res.json({ message: 'Material receipt rejected and reverted to dispatched stage.', transaction });
   } catch (error) {
     console.error('Reject receipt error:', error);
     res.status(500).json({ message: 'Server error.' });

@@ -33,3 +33,27 @@ exports.uploadFile = async (req, res) => {
     res.status(500).json({ message: 'Upload failed.' });
   }
 };
+
+exports.uploadBase64 = async (req, res) => {
+  try {
+    const { image } = req.body;
+    if (!image) {
+      return res.status(400).json({ message: 'No image base64 data provided.' });
+    }
+
+    // Strip base64 prefix
+    const base64Data = image.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    const result = await uploadToCloudinary(buffer, 'mms');
+
+    res.json({
+      message: 'Base64 image uploaded.',
+      url: result.secure_url,
+      publicId: result.public_id,
+    });
+  } catch (error) {
+    console.error('Base64 Upload error:', error);
+    res.status(500).json({ message: 'Base64 upload failed.' });
+  }
+};

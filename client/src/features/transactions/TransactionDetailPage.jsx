@@ -108,6 +108,7 @@ const TransactionDetailPage = () => {
   const [barcodeCloseDocNumber, setBarcodeCloseDocNumber] = useState('');
   const [barcodeCloseRemarks, setBarcodeCloseRemarks] = useState('');
   const [barcodeCloseSubmitting, setBarcodeCloseSubmitting] = useState(false);
+  const [barcodeCloseMgtId, setBarcodeCloseMgtId] = useState('');
 
   const chatEndRef = useRef(null);
 
@@ -199,7 +200,7 @@ const TransactionDetailPage = () => {
       const handlerList = empList;
       setHandlers(handlerList.map(h => ({ value: h._id, label: `${h.fullName} (${h.employeeId})` })));
 
-      const mgtList = empList.filter(e => e.role === 'department_admin' && e.departmentAdminType === 'management');
+      const mgtList = empList.filter(e => e.role === 'department_admin' && e.departmentAdminType === 'management' && e._id !== user?._id);
       setManagementUsers(mgtList.map(m => ({ value: m._id, label: `${m.fullName} (${m.employeeId})` })));
     }).catch(err => console.error(err));
   }, [id]);
@@ -486,15 +487,20 @@ const TransactionDetailPage = () => {
       alert('Please enter a document number.');
       return;
     }
+    if (['DC FOC', 'Invoice'].includes(barcodeCloseDocType) && !barcodeCloseMgtId) {
+      alert('Please select a management approver.');
+      return;
+    }
     setBarcodeCloseSubmitting(true);
     try {
       await api.post('/barcodes/close-request', {
         barcode: selectedBarcodeForClose,
         documentType: barcodeCloseDocType,
         documentNumber: barcodeCloseDocNumber,
-        remarks: barcodeCloseRemarks
+        remarks: barcodeCloseRemarks,
+        managementApprover: ['DC FOC', 'Invoice'].includes(barcodeCloseDocType) ? barcodeCloseMgtId : undefined
       });
-      alert('Close request submitted successfully for Team Lead approval!');
+      alert('Close request submitted successfully!');
       setBarcodeCloseModal(false);
       fetchData();
     } catch (err) {
@@ -561,14 +567,14 @@ const TransactionDetailPage = () => {
   // Visual Timeline Definition matching Mockup Panel 3
   const flowStages = [
     { label: 'Request Created', done: true, sub: getTimelineDate('Request Created') || new Date(txn.createdAt).toLocaleString(), originalIndex: 0 },
-    { label: 'Team Lead Approved', done: ['tl_approved', 'mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active'].includes(txn.status), sub: getTimelineDate('Team Lead Approved'), originalIndex: 1 },
-    { label: 'Management Approved', done: ['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active'].includes(txn.status), sub: getTimelineDate('Management Approved'), originalIndex: 2 },
-    { label: 'Store Accepted', done: ['store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active'].includes(txn.status), sub: getTimelineDate('Store Accepted'), originalIndex: 3 },
-    { label: 'Handler Assigned', done: ['handler_assigned', 'dispatched', 'received', 'completed', 'active'].includes(txn.status), sub: getTimelineDate('Handler Assigned'), originalIndex: 4 },
-    { label: 'Delivered to Requester', done: ['dispatched', 'received', 'completed', 'active'].includes(txn.status), sub: getTimelineDate('Dispatched'), originalIndex: 5 },
-    { label: 'Active / Distributed', done: ['received', 'completed', 'active'].includes(txn.status), sub: getTimelineDate('Received'), originalIndex: 6 },
-    { label: 'Returns in Progress', done: barcodes.some(b => ['Return Requested', 'Returned'].includes(b.status)), sub: getTimelineDate('Return'), originalIndex: 7 },
-    { label: 'All Items Returned', done: barcodes.length > 0 && barcodes.every(b => b.status === 'Returned'), sub: getTimelineDate('All Returned'), originalIndex: 8 },
+    { label: 'Team Lead Approved', done: ['tl_approved', 'mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status), sub: getTimelineDate('Team Lead Approved'), originalIndex: 1 },
+    { label: 'Management Approved', done: ['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status), sub: getTimelineDate('Management Approved'), originalIndex: 2 },
+    { label: 'Store Accepted', done: ['store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status), sub: getTimelineDate('Store Accepted'), originalIndex: 3 },
+    { label: 'Handler Assigned', done: (txn.timeline?.some(t => t.action === 'Handler Accepted') || ['dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status)), sub: getTimelineDate('Handler Accepted') || getTimelineDate('Handler Assigned'), originalIndex: 4 },
+    { label: 'Delivered to Requester', done: ['dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status), sub: getTimelineDate('Dispatched'), originalIndex: 5 },
+    { label: 'Active / Distributed', done: ['received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status), sub: getTimelineDate('Received'), originalIndex: 6 },
+    { label: 'Returns / Conversions in Progress', done: barcodes.some(b => ['Return Requested', 'Returned', 'Closed'].includes(b.status) || b.closeRequest?.status === 'pending'), sub: getTimelineDate('Return') || getTimelineDate('Close Requested') || getTimelineDate('Closed'), originalIndex: 7 },
+    { label: 'All Items Returned / Converted', done: barcodes.length > 0 && barcodes.every(b => ['Returned', 'Closed'].includes(b.status)), sub: getTimelineDate('All Returned') || getTimelineDate('Closed'), originalIndex: 8 },
     {
       label: txn.status === 'rejected' ? 'Request Rejected' : 'Transaction Closed',
       done: ['closed', 'completed', 'rejected'].includes(txn.status),
@@ -588,6 +594,10 @@ const TransactionDetailPage = () => {
     : uniqueOwners.length === 1
       ? uniqueOwners[0]
       : 'Main Store';
+
+  const allMaterialsResolved = barcodes.length > 0 && barcodes.every(b => {
+    return ['Returned', 'Closed', 'Split', 'Cancelled'].includes(b.status);
+  });
 
   // Construct unified transaction timeline events from approvals, transactions logs, and barcode histories
   const unifiedTimelineRaw = [];
@@ -618,7 +628,7 @@ const TransactionDetailPage = () => {
       stageIndex: 2
     });
   } else {
-    const tlDone = ['tl_approved', 'mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status);
+    const tlDone = ['tl_approved', 'mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
     const isRejected = txn.status === 'rejected' && !txn.approvalChain?.some(a => a.role === 'management');
     
     if (tlDone || isRejected || !hasPending) {
@@ -647,7 +657,7 @@ const TransactionDetailPage = () => {
       stageIndex: 3
     });
   } else {
-    const mgtDone = ['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status);
+    const mgtDone = ['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
     const isRejected = txn.status === 'rejected';
     
     if (mgtDone || isRejected || !hasPending) {
@@ -665,7 +675,7 @@ const TransactionDetailPage = () => {
 
   // 4. Store Sourcing Check
   const storeTimeline = txn.timeline?.find(t => t.action?.toLowerCase()?.includes('store accepted') || t.action?.toLowerCase()?.includes('ready (store accept)'));
-  const storeDone = ['store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status);
+  const storeDone = ['store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
   
   if (storeDone || !hasPending) {
     if (!storeDone) hasPending = true;
@@ -682,7 +692,7 @@ const TransactionDetailPage = () => {
   // 5. Sourcing & Dispatch (Two-Way Flow)
   if (!txn.handler) {
     const dispatchTimeline = txn.timeline?.find(t => t.action?.toLowerCase()?.includes('dispatched'));
-    const dispatchDone = ['dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status);
+    const dispatchDone = ['dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
     
     if (dispatchDone || !hasPending) {
       if (!dispatchDone) hasPending = true;
@@ -696,14 +706,15 @@ const TransactionDetailPage = () => {
       });
     }
   } else {
-    const handlerTimeline = txn.timeline?.find(t => t.action?.toLowerCase()?.includes('handler assigned'));
-    const handlerDone = ['handler_assigned', 'dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status);
+    const handlerAcceptedTimeline = txn.timeline?.find(t => t.action === 'Handler Accepted');
+    const handlerDone = !!handlerAcceptedTimeline || ['dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
+    const handlerAssignedTimeline = txn.timeline?.find(t => t.action?.toLowerCase()?.includes('handler assigned'));
     
     if (handlerDone || !hasPending) {
       if (!handlerDone) hasPending = true;
       unifiedTimelineRaw.push({
-        timestamp: handlerTimeline ? new Date(handlerTimeline.timestamp || handlerTimeline.createdAt) : null,
-        action: `Handler Assigned: ${txn.handler?.fullName || 'Rahul Handler'}`,
+        timestamp: handlerAcceptedTimeline ? new Date(handlerAcceptedTimeline.timestamp || handlerAcceptedTimeline.createdAt) : (handlerAssignedTimeline ? new Date(handlerAssignedTimeline.timestamp || handlerAssignedTimeline.createdAt) : null),
+        action: `Handler Assigned: ${txn.handler?.fullName || 'Handler'}`,
         by: txn.store?.fullName || 'Store Admin',
         status: handlerDone ? 'ACCEPTED' : 'PENDING',
         badgeChar: 'H',
@@ -712,24 +723,27 @@ const TransactionDetailPage = () => {
     }
 
     const dispatchTimeline = txn.timeline?.find(t => t.action?.toLowerCase()?.includes('dispatched'));
-    const dispatchDone = ['dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status);
+    const dispatchDone = ['dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
     
     if (dispatchDone || !hasPending) {
-      if (!dispatchDone) hasPending = true;
-      unifiedTimelineRaw.push({
-        timestamp: dispatchTimeline ? new Date(dispatchTimeline.timestamp || dispatchTimeline.createdAt) : null,
-        action: 'Handler Delivery / Transit',
-        by: txn.handler?.fullName || 'Handler',
-        status: dispatchDone ? 'DISPATCHED' : 'PENDING',
-        badgeChar: 'D',
-        stageIndex: 6
-      });
+      if (!dispatchDone) {
+        hasPending = true;
+      } else {
+        unifiedTimelineRaw.push({
+          timestamp: dispatchTimeline ? new Date(dispatchTimeline.timestamp || dispatchTimeline.createdAt) : null,
+          action: 'Handler Delivery / Transit',
+          by: txn.handler?.fullName || 'Handler',
+          status: 'DISPATCHED',
+          badgeChar: 'D',
+          stageIndex: 6
+        });
+      }
     }
   }
 
   // 6. Requester Collection / Acceptance
   const receiveTimeline = txn.timeline?.find(t => t.action?.toLowerCase()?.includes('received'));
-  const receiveDone = ['received', 'completed', 'active', 'closed'].includes(txn.status);
+  const receiveDone = ['received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status);
   
   if (receiveDone || !hasPending) {
     if (!receiveDone) hasPending = true;
@@ -743,13 +757,35 @@ const TransactionDetailPage = () => {
     });
   }
 
-  // 7. Post-delivery Barcode Operations (Transfers, Splits, Returns)
+  // 7. Post-delivery Barcode Operations (Transfers, Splits, Returns, Conversions)
   barcodes.forEach(bc => {
-    bc.history?.forEach(h => {
-      // Only include post-delivery specific barcode operations: Transfer, Return, Split
+    const historyToRender = [...(bc.history || [])];
+    if (bc.closeRequest) {
+      if (bc.closeRequest.status === 'pending_accounts_approval') {
+        historyToRender.push({
+          action: 'Pending Accounts Upload',
+          user: { fullName: 'Accounts Admin' },
+          timestamp: bc.closeRequest.updatedAt || new Date().toISOString(),
+          remarks: 'Awaiting invoice document upload to close transaction'
+        });
+      } else if (bc.closeRequest.status === 'pending_store_acceptance') {
+        historyToRender.push({
+          action: 'Pending Store Acceptance',
+          user: { fullName: 'Store Admin' },
+          timestamp: bc.closeRequest.updatedAt || new Date().toISOString(),
+          remarks: 'Awaiting store confirmation of the conversion request'
+        });
+      }
+    }
+
+    historyToRender.forEach((h, hIdx) => {
+      // Include post-delivery specific barcode operations: Transfer, Return, Split, Close, Closed, Approval
       const isPostDelivery = h.action.toLowerCase().includes('transfer') ||
                              h.action.toLowerCase().includes('split') ||
-                             h.action.toLowerCase().includes('return');
+                             h.action.toLowerCase().includes('return') ||
+                             h.action.toLowerCase().includes('close') ||
+                             h.action.toLowerCase().includes('closed') ||
+                             h.action.toLowerCase().includes('approval');
       if (!isPostDelivery) return;
 
       const ts = h.timestamp || h.createdAt;
@@ -758,24 +794,149 @@ const TransactionDetailPage = () => {
         let statusLabel = 'COMPLETED';
         let badgeChar = 'B';
 
+        // Check if there is a later completion event in history for this barcode
+        const hasLaterCompletion = historyToRender.slice(hIdx + 1).some(laterH => {
+          const latAct = laterH.action.toLowerCase();
+          return latAct.includes('accepted') || 
+                 latAct.includes('completed') || 
+                 latAct.includes('approved') || 
+                 latAct.includes('rejected') || 
+                 latAct.includes('closed') ||
+                 latAct.includes('returned') ||
+                 latAct.includes('first approval') ||
+                 latAct.includes('approval');
+        });
+
+        let byLabel = h.user?.fullName || 'Operator';
+
         if (h.action.toLowerCase().includes('transfer')) {
-          actionLabel = `Transfer for ${bc.barcode}`;
-          statusLabel = h.action.toLowerCase().includes('request') ? 'PENDING' : 'ACCEPTED';
+          actionLabel = `${h.action} for ${bc.barcode}`;
+          if (h.action.toLowerCase().includes('accepted') || h.action.toLowerCase().includes('approved')) {
+            statusLabel = 'ACCEPTED';
+            byLabel = `Accepted by: ${h.user?.fullName || 'Operator'}`;
+          } else if (h.action.toLowerCase().includes('rejected')) {
+            statusLabel = 'REJECTED';
+            byLabel = `Rejected by: ${h.user?.fullName || 'Operator'}`;
+          } else {
+            statusLabel = hasLaterCompletion ? 'ACCEPTED' : 'PENDING';
+            if (statusLabel === 'PENDING') {
+              if (h.action.toLowerCase().includes('pending acceptance')) {
+                byLabel = `Pending Acceptance by: ${h.user?.fullName || 'Recipient'}`;
+              } else {
+                byLabel = `Pending Approval`;
+              }
+            } else {
+              byLabel = `Initiated by: ${h.user?.fullName || 'Operator'}`;
+            }
+          }
           badgeChar = 'T';
         } else if (h.action.toLowerCase().includes('split')) {
-          actionLabel = `Split Lot for ${bc.barcode}`;
-          statusLabel = h.action.toLowerCase().includes('request') ? 'PENDING' : 'ACCEPTED';
+          actionLabel = `${h.action} for ${bc.barcode}`;
+          if (h.action.toLowerCase().includes('accepted') || h.action.toLowerCase().includes('approved') || h.action.toLowerCase().includes('completed')) {
+            statusLabel = 'ACCEPTED';
+            byLabel = `Accepted by: ${h.user?.fullName || 'Operator'}`;
+          } else if (h.action.toLowerCase().includes('rejected')) {
+            statusLabel = 'REJECTED';
+            byLabel = `Rejected by: ${h.user?.fullName || 'Operator'}`;
+          } else {
+            statusLabel = hasLaterCompletion ? 'ACCEPTED' : 'PENDING';
+            if (statusLabel === 'PENDING') {
+              byLabel = 'Pending Store Approval';
+            } else {
+              byLabel = `Initiated by: ${h.user?.fullName || 'Operator'}`;
+            }
+          }
           badgeChar = 'S';
         } else if (h.action.toLowerCase().includes('return')) {
-          actionLabel = `Return to Store for ${bc.barcode}`;
-          statusLabel = h.action.toLowerCase().includes('request') ? 'PENDING' : 'ACCEPTED';
+          actionLabel = `${h.action} for ${bc.barcode}`;
+          if (h.action.toLowerCase().includes('accepted') || h.action.toLowerCase().includes('completed') || h.action.toLowerCase().includes('returned')) {
+            statusLabel = 'ACCEPTED';
+            byLabel = `Accepted by: ${h.user?.fullName || 'Operator'}`;
+          } else if (h.action.toLowerCase().includes('rejected')) {
+            statusLabel = 'REJECTED';
+            byLabel = `Rejected by: ${h.user?.fullName || 'Operator'}`;
+          } else {
+            // intermediate return actions (requested, collected, handed over) are PENDING until final acceptance
+            statusLabel = hasLaterCompletion ? 'ACCEPTED' : 'PENDING';
+            if (statusLabel === 'PENDING') {
+              if (h.action.toLowerCase().includes('requested')) {
+                byLabel = `Pending Return Collection by Handler`;
+              } else if (h.action.toLowerCase().includes('collected')) {
+                byLabel = `Pending Handover to Store by: ${h.user?.fullName || 'Handler'}`;
+              } else if (h.action.toLowerCase().includes('handed over')) {
+                byLabel = `Pending Store Acceptance`;
+              } else {
+                byLabel = 'Pending Return';
+              }
+            } else {
+              if (h.action.toLowerCase().includes('collected')) {
+                byLabel = `Collected by: ${h.user?.fullName || 'Handler'}`;
+              } else if (h.action.toLowerCase().includes('handed over')) {
+                byLabel = `Handed over by: ${h.user?.fullName || 'Handler'}`;
+              } else {
+                byLabel = `Initiated by: ${h.user?.fullName || 'Operator'}`;
+              }
+            }
+          }
           badgeChar = 'R';
+        } else if (h.action.toLowerCase().includes('close') || h.action.toLowerCase().includes('closed') || h.action.toLowerCase().includes('approval') || h.action.toLowerCase().includes('upload') || h.action.toLowerCase().includes('conversion')) {
+          actionLabel = `${h.action} for ${bc.barcode}`;
+          if (h.action.toLowerCase().includes('closed') || h.action.toLowerCase().includes('completed')) {
+            statusLabel = 'APPROVED';
+            byLabel = `Approved by: ${h.user?.fullName || 'Operator'}`;
+          } else if (h.action.toLowerCase().includes('rejected') || h.action.toLowerCase().includes('declined')) {
+            statusLabel = 'REJECTED';
+            byLabel = `Rejected by: ${h.user?.fullName || 'Operator'}`;
+          } else if (h.action === 'First Approval') {
+            const isApproved = ['pending_accounts_approval', 'pending_store_acceptance', 'approved'].includes(bc.closeRequest?.status);
+            statusLabel = isApproved ? 'APPROVED' : 'PENDING';
+            if (statusLabel === 'PENDING') {
+              if (bc.closeRequest?.managementApprover) {
+                byLabel = `Pending Management Approval by: ${bc.closeRequest.managementApprover.fullName}`;
+              } else {
+                byLabel = 'Pending Approval';
+              }
+            } else {
+              byLabel = `Approved by Management: ${h.user?.fullName || 'Approver'}`;
+            }
+          } else if (h.action === 'Close Requested') {
+            const isAccepted = ['pending_accounts_approval', 'pending_store_acceptance', 'approved'].includes(bc.closeRequest?.status);
+            statusLabel = isAccepted ? 'ACCEPTED' : 'PENDING';
+            if (statusLabel === 'PENDING') {
+              if (bc.closeRequest?.managementApprover) {
+                byLabel = `Pending Management Approval by: ${bc.closeRequest.managementApprover.fullName}`;
+              } else {
+                byLabel = 'Pending Approval';
+              }
+            } else {
+              byLabel = `Initiated by: ${h.user?.fullName || 'Operator'}`;
+            }
+          } else if (h.action.toLowerCase().includes('pending')) {
+            statusLabel = 'PENDING';
+            byLabel = h.user?.fullName || 'Pending Action';
+          } else {
+            statusLabel = hasLaterCompletion ? 'APPROVED' : 'PENDING';
+            if (statusLabel === 'PENDING') {
+              if (bc.closeRequest?.status === 'pending_accounts_approval') {
+                byLabel = 'Pending Accounts Approval';
+              } else if (bc.closeRequest?.status === 'pending_store_acceptance') {
+                byLabel = 'Pending Store Acceptance';
+              } else if (bc.closeRequest?.managementApprover) {
+                byLabel = `Pending Management Approval by: ${bc.closeRequest.managementApprover.fullName}`;
+              } else {
+                byLabel = 'Pending Approval';
+              }
+            } else {
+              byLabel = `Initiated by: ${h.user?.fullName || 'Operator'}`;
+            }
+          }
+          badgeChar = 'C';
         }
 
         unifiedTimelineRaw.push({
           timestamp: new Date(ts),
           action: actionLabel,
-          by: h.user?.fullName || 'Operator',
+          by: byLabel,
           remarks: h.remarks,
           status: statusLabel,
           badgeChar,
@@ -1062,7 +1223,7 @@ const TransactionDetailPage = () => {
                 Created on {new Date(txn.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}, {new Date(txn.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </p>
             </div>
-            {['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'closed'].includes(txn.status) && (
+            {(['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status) && !allMaterialsResolved && !txn.chatLocked) && (
               <Button variant="outline" size="sm" onClick={handleOpenTxnChat} className="flex items-center gap-1.5 font-extrabold text-xs uppercase text-blue-600 border-blue-200 hover:bg-blue-50">
                 <Send className="w-3.5 h-3.5 animate-pulse" /> Chat
               </Button>
@@ -1622,7 +1783,7 @@ const TransactionDetailPage = () => {
             </div>
 
             {/* Modal Input Form Footer */}
-            {txn.status !== 'closed' && txn.status !== 'completed' && txn.status !== 'rejected' && !txn.chatLocked ? (
+            {(txn.status !== 'closed' || !allMaterialsResolved) && txn.status !== 'completed' && txn.status !== 'rejected' && !txn.chatLocked && !allMaterialsResolved ? (
               <form onSubmit={handleSendTxnMessage} className="pt-4 border-t border-slate-100 dark:border-slate-800 shrink-0 flex gap-2">
                 <input
                   type="text"
@@ -1955,8 +2116,26 @@ const TransactionDetailPage = () => {
                 >
                   <option value="DC Internal">DC Internal</option>
                   <option value="DC FOC">DC FOC</option>
+                  <option value="Invoice">Invoice</option>
                 </select>
               </div>
+
+              {['DC FOC', 'Invoice'].includes(barcodeCloseDocType) && (
+                <div>
+                  <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Choose Management Approver *</label>
+                  <select
+                    value={barcodeCloseMgtId}
+                    onChange={(e) => setBarcodeCloseMgtId(e.target.value)}
+                    required
+                    className="w-full text-xs bg-slate-50 border border-slate-200 focus:border-blue-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:focus:border-blue-500 dark:text-white px-3 py-2.5 font-semibold"
+                  >
+                    <option value="">Select Management Admin...</option>
+                    {managementUsers.map(u => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div>
                 <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">New Document Number *</label>
@@ -1976,7 +2155,7 @@ const TransactionDetailPage = () => {
                   value={barcodeCloseRemarks}
                   onChange={(e) => setBarcodeCloseRemarks(e.target.value)}
                   required
-                  placeholder="Conversion reason for TL approval..."
+                  placeholder="Conversion reason for approval..."
                   rows="2.5"
                   className="w-full text-xs bg-slate-50 border border-slate-200 focus:border-blue-500 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 dark:bg-slate-950 dark:border-slate-800 dark:focus:border-blue-500 dark:text-white px-3 py-2.5 font-semibold"
                 />

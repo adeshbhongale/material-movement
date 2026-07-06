@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, CheckCircle, FileText, Layers, MapPin, Plus, Shield, Trash2 } from 'lucide-react';
+import { ArrowLeft, Camera, CheckCircle, FileText, Layers, MapPin, Shield, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
@@ -79,9 +79,14 @@ const StoreDispatchPage = () => {
         setReceiverId(tx.requester?._id || '');
 
         // Fetch the expected return date from request form
-        if (tx.expectedReturnDate) {
-          const formattedDate = new Date(tx.expectedReturnDate).toISOString().split('T')[0];
-          setExpectedReturnDate(formattedDate);
+        const dateVal = tx.expectedReturnDate || tx.dueDate;
+        if (dateVal) {
+          try {
+            const formattedDate = new Date(dateVal).toISOString().split('T')[0];
+            setExpectedReturnDate(formattedDate);
+          } catch (e) {
+            console.error('Error formatting date:', dateVal, e);
+          }
         }
 
         // Map transaction materials to local form rows
@@ -97,7 +102,7 @@ const StoreDispatchPage = () => {
             description: m.description || '',
             price: m.price || 0,
             barcodes: barcodeInputs,
-            photo: null,
+            photos: [],
             isPreExisting: true
           };
         });
@@ -137,7 +142,7 @@ const StoreDispatchPage = () => {
         description: 'Store Added Item',
         price: 0,
         barcodes: [''],
-        photo: null,
+        photos: [],
         isPreExisting: false
       }
     ]);
@@ -175,8 +180,8 @@ const StoreDispatchPage = () => {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const updated = [...materialRows];
-          updated[index].photo = {
-            url: `/images/mock-material-${index + 1}.jpg`,
+          const newPhoto = {
+            url: `/images/mock-material-${index + 1}-${Date.now()}.jpg`,
             metadata: {
               lat: position.coords.latitude,
               lng: position.coords.longitude,
@@ -189,12 +194,13 @@ const StoreDispatchPage = () => {
               capturedAt: new Date().toISOString()
             }
           };
+          updated[index].photos = [...(updated[index].photos || []), newPhoto];
           setMaterialRows(updated);
         },
         (error) => {
           const updated = [...materialRows];
-          updated[index].photo = {
-            url: `/images/mock-material-${index + 1}.jpg`,
+          const newPhoto = {
+            url: `/images/mock-material-${index + 1}-${Date.now()}.jpg`,
             metadata: {
               lat: 18.5204,
               lng: 73.8567,
@@ -207,6 +213,7 @@ const StoreDispatchPage = () => {
               capturedAt: new Date().toISOString()
             }
           };
+          updated[index].photos = [...(updated[index].photos || []), newPhoto];
           setMaterialRows(updated);
         }
       );
@@ -261,7 +268,7 @@ const StoreDispatchPage = () => {
 
   // Filter out super_admin and apply search query
   const filteredEmployees = employees.filter(emp => {
-    if (emp.role === 'super_admin') return false;
+    if (emp.role === 'super_admin' || emp._id === user?._id) return false;
     if (empSearchQuery.trim()) {
       const q = empSearchQuery.toLowerCase();
       const matchName = emp.fullName?.toLowerCase().includes(q);
@@ -273,7 +280,7 @@ const StoreDispatchPage = () => {
 
   // Filter out super_admin and apply search query for handlers
   const filteredHandlers = handlers.filter(h => {
-    if (h.role === 'super_admin') return false;
+    if (h.role === 'super_admin' || h._id === user?._id) return false;
     if (handlerSearchQuery.trim()) {
       const q = handlerSearchQuery.toLowerCase();
       const matchName = h.fullName?.toLowerCase().includes(q);
@@ -317,8 +324,8 @@ const StoreDispatchPage = () => {
         setError(`Please specify a name for material row #${i + 1}.`);
         return;
       }
-      if (row.price <= 0) {
-        setError(`Please enter a valid price for material "${row.name}".`);
+      if (row.price < 10) {
+        setError(`Unit price must be more than 10 rupees for material "${row.name}".`);
         return;
       }
       if (row.barcodes.some(bc => !bc.trim())) {
@@ -329,7 +336,7 @@ const StoreDispatchPage = () => {
         setError(`Barcodes for material "${row.name}" must contain only numbers (no alphabetic characters).`);
         return;
       }
-      if (!row.photo) {
+      if (!row.photos || row.photos.length === 0) {
         setError(`Geo-tagged verification photo is required for material "${row.name}".`);
         return;
       }
@@ -360,7 +367,7 @@ const StoreDispatchPage = () => {
           description: row.description,
           price: row.price,
           barcodes: row.barcodes.map(bc => bc.trim()),
-          photos: [row.photo]
+          photos: row.photos
         })),
         photos: docPhotos
       };
@@ -431,62 +438,14 @@ const StoreDispatchPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
-                Receiver Employee *
+                Sender / Receiver Employee
               </label>
-              <div className="relative receiver-dropdown-container">
-                <button
-                  type="button"
-                  onClick={() => setEmpDropdownOpen(!empDropdownOpen)}
-                  className="w-full flex justify-between items-center text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-left text-slate-800 dark:text-slate-200"
-                >
-                  <span>
-                    {receiverId 
-                      ? (employees.find(e => e._id === receiverId) 
-                          ? `${employees.find(e => e._id === receiverId).fullName} (${employees.find(e => e._id === receiverId).employeeId})` 
-                          : 'Select Receiver Employee')
-                      : 'Select Receiver Employee'}
-                  </span>
-                  <span className="text-slate-400">▼</span>
-                </button>
-
-                {empDropdownOpen && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-20 flex flex-col max-h-60 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="p-2 border-b border-slate-100 dark:border-slate-800 shrink-0">
-                      <input
-                        type="text"
-                        value={empSearchQuery}
-                        onChange={(e) => setEmpSearchQuery(e.target.value)}
-                        placeholder="Search employee..."
-                        className="w-full text-xs bg-slate-50 border border-slate-250 dark:bg-slate-950 dark:border-slate-800 rounded px-2.5 py-1.5 font-semibold focus:outline-none focus:border-blue-500"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-
-                    <div className="overflow-y-auto flex-1 py-1">
-                      {filteredEmployees.length > 0 ? (
-                        filteredEmployees.map(emp => (
-                          <button
-                            key={emp._id}
-                            type="button"
-                            onClick={() => {
-                              setReceiverId(emp._id);
-                              setEmpDropdownOpen(false);
-                              setEmpSearchQuery('');
-                            }}
-                            className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer block transition ${emp._id === receiverId ? 'bg-blue-50/50 dark:bg-blue-955/20 text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-350'}`}
-                          >
-                            {emp.fullName} ({emp.employeeId})
-                          </button>
-                        ))
-                      ) : (
-                        <div className="p-3.5 text-xs text-slate-400 font-bold text-center">
-                          No employees found
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <input
+                type="text"
+                value={transaction?.requester ? `${transaction.requester.fullName} (${transaction.requester.employeeId || 'N/A'})` : 'N/A'}
+                disabled
+                className="w-full text-xs bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold cursor-not-allowed text-slate-800"
+              />
             </div>
 
             <div>
@@ -498,7 +457,7 @@ const StoreDispatchPage = () => {
                 value={documentNumber}
                 onChange={(e) => setDocumentNumber(e.target.value)}
                 required
-                placeholder="e.g. DC-10293"
+                placeholder="enter document number"
                 className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
               />
             </div>
@@ -510,9 +469,9 @@ const StoreDispatchPage = () => {
               <input
                 type="date"
                 value={expectedReturnDate}
-                onChange={(e) => setExpectedReturnDate(e.target.value)}
+                disabled
                 required
-                className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-955 dark:border-slate-800 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
+                className="w-full text-xs bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-800 rounded-lg px-3 py-2 font-bold cursor-not-allowed text-slate-800"
               />
             </div>
           </div>
@@ -569,10 +528,10 @@ const StoreDispatchPage = () => {
                   className="w-full flex justify-between items-center text-xs bg-slate-50 border border-slate-200 dark:bg-slate-955 dark:border-slate-800 rounded-lg px-3 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-left text-slate-800 dark:text-slate-200"
                 >
                   <span>
-                    {handlerId 
-                      ? (handlers.find(h => h._id === handlerId) 
-                          ? `${handlers.find(h => h._id === handlerId).fullName} (${handlers.find(h => h._id === handlerId).employeeId})` 
-                          : 'Select Handler employee')
+                    {handlerId
+                      ? (handlers.find(h => h._id === handlerId)
+                        ? `${handlers.find(h => h._id === handlerId).fullName} (${handlers.find(h => h._id === handlerId).employeeId})`
+                        : 'Select Handler employee')
                       : 'Select Handler employee'}
                   </span>
                   <span className="text-slate-400">▼</span>
@@ -627,17 +586,6 @@ const StoreDispatchPage = () => {
               <Layers className="h-4 w-4 text-blue-600" />
               3. Assign Barcodes & Item Pricing
             </h3>
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddMaterialRow}
-              className="flex items-center gap-1.5 text-xs text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-800 font-bold"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              Add Material
-            </Button>
           </div>
 
           <div className="space-y-6">
@@ -659,8 +607,8 @@ const StoreDispatchPage = () => {
                 {/* Header/Pricing Specifications Row */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                   {/* Material Name */}
-                  <div className="md:col-span-5 space-y-1.5">
-                    <span className="text-[9px] bg-blue-50 dark:bg-blue-950/40 text-blue-650 dark:text-blue-400 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                  <div className="md:col-span-4 space-y-1.5">
+                    <span className="text-[9px] bg-blue-50 dark:bg-blue-955/40 text-blue-650 dark:text-blue-400 px-2 py-0.5 rounded font-black uppercase tracking-wider">
                       Material Specification
                     </span>
                     <input
@@ -669,33 +617,44 @@ const StoreDispatchPage = () => {
                       onChange={(e) => handleMaterialNameChange(matIndex, e.target.value)}
                       placeholder="Enter Material Name..."
                       required
-                      className="w-full text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 mt-1"
+                      disabled={row.isPreExisting}
+                      className={`w-full text-xs border rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 mt-1 ${row.isPreExisting
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                        : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800 text-slate-800 dark:text-slate-200'
+                        }`}
                     />
                   </div>
 
-                  {/* Quantity & Unit */}
-                  <div className="md:col-span-3 space-y-1.5">
+                  {/* Quantity */}
+                  <div className="md:col-span-2 space-y-1.5">
                     <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Quantity</span>
-                    <div className="flex gap-2">
-                      <input
-                        type="number"
-                        min="1"
-                        value={row.quantity}
-                        onChange={(e) => handleQuantityChange(matIndex, e.target.value)}
-                        className="w-20 text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-2.5 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      <input
-                        type="text"
-                        value={row.unit}
-                        onChange={(e) => {
-                          const updated = [...materialRows];
-                          updated[matIndex].unit = e.target.value;
-                          setMaterialRows(updated);
-                        }}
-                        placeholder="Unit"
-                        className="flex-1 text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-2.5 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      value={row.quantity}
+                      onChange={(e) => handleQuantityChange(matIndex, e.target.value)}
+                      disabled={row.isPreExisting}
+                      className={`w-full text-xs border rounded-lg px-2.5 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 ${row.isPreExisting
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 cursor-not-allowed'
+                        : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-800 text-slate-800 dark:text-slate-200'
+                        }`}
+                    />
+                  </div>
+
+                  {/* Unit */}
+                  <div className="md:col-span-2 space-y-1.5">
+                    <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Unit</span>
+                    <input
+                      type="text"
+                      value={row.unit}
+                      onChange={(e) => {
+                        const updated = [...materialRows];
+                        updated[matIndex].unit = e.target.value;
+                        setMaterialRows(updated);
+                      }}
+                      placeholder="Unit"
+                      className="w-full text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-2.5 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-200"
+                    />
                   </div>
 
                   {/* Unit Price */}
@@ -705,11 +664,11 @@ const StoreDispatchPage = () => {
                     </label>
                     <input
                       type="number"
-                      min="0"
+                      min="10"
                       value={row.price || ''}
                       onChange={(e) => handlePriceChange(matIndex, e.target.value)}
                       required
-                      placeholder="0"
+                      placeholder="10"
                       className="w-full text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
                     />
                   </div>
@@ -769,21 +728,44 @@ const StoreDispatchPage = () => {
                       <Camera className="h-3.5 w-3.5" />
                       Capture Tagged Photo
                     </Button>
-
-                    {row.photo && (
-                      <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 p-2 rounded-lg border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-                        <img src={row.photo.url} alt="Material Capture" className="w-10 h-10 object-cover rounded border border-slate-200 dark:border-slate-800" />
-                        <div className="text-[9px] text-slate-400 leading-tight">
-                          <span className="block text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
-                            <MapPin className="h-2.5 w-2.5 text-rose-500" />
-                            {row.photo.metadata.lat.toFixed(4)}, {row.photo.metadata.lng.toFixed(4)}
-                          </span>
-                          <span className="block truncate max-w-[150px] font-semibold">{row.photo.metadata.address}</span>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
+
+                {row.photos && row.photos.length > 0 && (
+                  <div className="border-t border-slate-100 dark:border-slate-850 pt-3">
+                    <span className="block text-[9px] text-slate-400 font-extrabold uppercase mb-2">
+                      Material Photos Verification ({row.photos.length}) *
+                    </span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                      {row.photos.map((photo, pIdx) => (
+                        <div key={pIdx} className="flex items-center justify-between gap-2.5 bg-slate-50 dark:bg-slate-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 relative animate-in zoom-in-95 duration-200 w-full">
+                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                            <img src={photo.url} alt={`Material Capture ${pIdx + 1}`} className="w-10 h-10 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0" />
+                            <div className="text-[9px] text-slate-455 leading-tight min-w-0">
+                              <span className="block text-slate-600 dark:text-slate-300 font-black flex items-center gap-1">
+                                <MapPin className="h-2.5 w-2.5 text-rose-500 shrink-0" />
+                                {photo.metadata.lat.toFixed(4)}, {photo.metadata.lng.toFixed(4)}
+                              </span>
+                              <span className="block truncate font-semibold mt-0.5">{photo.metadata.address}</span>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = [...materialRows];
+                              updated[matIndex].photos = updated[matIndex].photos.filter((_, idx) => idx !== pIdx);
+                              setMaterialRows(updated);
+                            }}
+                            className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-955/20 rounded transition shrink-0"
+                            title="Delete photo"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>

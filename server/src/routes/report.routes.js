@@ -8,6 +8,7 @@ router.use(auth);
 
 router.get('/transactions', requirePermission('report:view'), reportController.getTransactionReport);
 router.get('/transactions/export', requirePermission('report:export'), reportController.exportTransactionReport);
+router.get('/dc-employee/export', requirePermission('report:export'), reportController.exportDcEmployeeReport);
 router.get('/', requirePermission('report:view'), reportController.getTransactionReport);
 router.get('/export', requirePermission('report:export'), reportController.exportTransactionReport);
 

@@ -9,6 +9,8 @@ router.use(auth);
 router.get('/', requirePermission('barcode:view'), barcodeController.listBarcodes);
 router.get('/search', requirePermission('barcode:view'), barcodeController.searchBarcodes);
 router.get('/pending/transfers', barcodeController.getPendingTransfers);
+router.get('/list/transfers', barcodeController.getAllTransfers);
+router.get('/list/returns', barcodeController.getAllReturns);
 router.get('/transaction/:transactionId', requirePermission('barcode:view'), barcodeController.getBarcodesByTransaction);
 router.get('/:barcode', requirePermission('barcode:view'), barcodeController.getBarcodeDetail);
 router.post('/transfer', requirePermission('transfer:create'), barcodeController.transferBarcode);
@@ -19,7 +21,7 @@ router.put('/return/:returnId/handler-action', barcodeController.handleReturnHan
 router.put('/return/:returnId/assign-handler', barcodeController.assignReturnHandler);
 router.post('/split-request', requirePermission('material:view'), barcodeController.createSplitRequest);
 router.get('/split-requests/pending', requirePermission('approval:view'), barcodeController.getPendingSplitRequests);
-router.get('/returns/pending', requirePermission('approval:view'), barcodeController.getPendingReturns);
+router.get('/returns/pending', requirePermission('return:view'), barcodeController.getPendingReturns);
 router.post('/approve-split', requirePermission('approval:approve'), barcodeController.approveSplitRequest);
 router.post('/close-request', requirePermission('barcode:view'), barcodeController.createCloseRequest);
 router.get('/close-requests/pending', requirePermission('approval:view'), barcodeController.getPendingCloseRequests);

@@ -43,6 +43,7 @@ const PendingTransactionsPage = () => {
   const [approveNewBarcode, setApproveNewBarcode] = useState('');
   const [approveMaterialName, setApproveMaterialName] = useState('');
   const [pendingReturns, setPendingReturns] = useState([]);
+  const [txnExpectedReturnDates, setTxnExpectedReturnDates] = useState({});
 
   // Custom Rejection Modal States
   const [rejectModalOpen, setRejectModalOpen] = useState(false);
@@ -209,14 +210,14 @@ const PendingTransactionsPage = () => {
     setLoading(true);
     try {
       const isStore = activeRole.role === 'super_admin' || (activeRole.role === 'department_admin' && activeRole.adminType === 'store');
-      const isTL = activeRole.role === 'team_lead' || activeRole.role === 'super_admin';
+      const isCloseReqEligible = ['super_admin', 'team_lead', 'department_admin'].includes(activeRole.role);
 
       const [txnRes, transferRes, splitRes, returnRes, closeRes] = await Promise.all([
         api.get('/transactions'),
         api.get('/barcodes/pending/transfers'),
         isStore ? api.get('/barcodes/split-requests/pending') : Promise.resolve({ data: { data: [] } }),
         api.get('/barcodes/returns/pending'),
-        isTL ? api.get('/barcodes/close-requests/pending') : Promise.resolve({ data: { data: [] } })
+        isCloseReqEligible ? api.get('/barcodes/close-requests/pending') : Promise.resolve({ data: { data: [] } })
       ]);
 
       const allTxns = txnRes.data.data || [];
@@ -224,6 +225,15 @@ const PendingTransactionsPage = () => {
       const allSplits = splitRes.data.data || [];
       const allReturns = returnRes.data.data || [];
       const allCloses = closeRes.data.data || [];
+
+      // Map transaction expected return dates
+      const dateMap = {};
+      allTxns.forEach(t => {
+        if (t.transactionId) {
+          dateMap[t.transactionId] = t.expectedReturnDate || t.dueDate || null;
+        }
+      });
+      setTxnExpectedReturnDates(dateMap);
 
       setTxns(allTxns);
       setPendingTransfers(allTransfers);
@@ -266,7 +276,7 @@ const PendingTransactionsPage = () => {
     api.get('/employees?limit=1000&allDepartments=true')
       .then(res => {
         const empList = res.data.employees || res.data.data || [];
-        setHandlers(empList.map(h => ({ value: h._id, label: `${h.fullName} (${h.employeeId})` })));
+        setHandlers(empList.filter(h => h._id !== user?._id && h.role !== 'super_admin').map(h => ({ value: h._id, label: `${h.fullName} (${h.employeeId})` })));
       })
       .catch(err => console.error('Error loading employees:', err));
   }, [activeRole.role, activeRole.adminType]);
@@ -287,27 +297,37 @@ const PendingTransactionsPage = () => {
     }
 
     // 1. Status mapping based on tab
+    const isHandlerDeliveryPending = t.handler && ['store_accepted', 'handler_assigned', 'dispatched'].includes(t.status);
+
     if (statusTab === 'pending') {
-      if (activeRole.role === 'employee') {
-        const isHandlerPending = (t.handler?._id === user?._id || t.handler === user?._id) && ['store_accepted', 'handler_assigned'].includes(t.status);
-        const isRequesterPending = (t.requester?._id === user?._id || t.requester === user?._id) && t.status === 'dispatched';
-        if (!isHandlerPending && !isRequesterPending) return false;
-      } else if (activeRole.role === 'team_lead') {
-        if (t.status !== 'submitted') return false;
-      } else if (activeRole.role === 'department_admin') {
-        if (activeRole.adminType === 'management') {
-          // Management sees tl_approved requests
-          if (t.status !== 'tl_approved') return false;
-        } else if (activeRole.adminType === 'store') {
-          // Store sees requests after management approved
-          if (!['mgt_approved', 'ready_for_dispatch', 'store_accepted'].includes(t.status)) return false;
-        } else {
-          return false;
+      if (isHandlerDeliveryPending) {
+        if (activeRole.role === 'employee') {
+          const isMyTxn = (t.requester?._id === user?._id || t.requester === user?._id) ||
+                          (t.handler?._id === user?._id || t.handler === user?._id);
+          if (!isMyTxn) return false;
         }
-      } else if (activeRole.role === 'super_admin') {
-        if (['completed', 'received', 'closed', 'rejected'].includes(t.status)) return false;
+      } else {
+        if (activeRole.role === 'employee') {
+          const isRequesterPending = (t.requester?._id === user?._id || t.requester === user?._id) && t.status === 'dispatched';
+          if (!isRequesterPending) return false;
+        } else if (activeRole.role === 'team_lead') {
+          if (t.status !== 'submitted') return false;
+        } else if (activeRole.role === 'department_admin') {
+          if (activeRole.adminType === 'management') {
+            if (t.status !== 'tl_approved') return false;
+          } else if (activeRole.adminType === 'store') {
+            if (!['mgt_approved', 'ready_for_dispatch', 'store_accepted'].includes(t.status)) return false;
+          } else {
+            return false;
+          }
+        } else if (activeRole.role === 'super_admin') {
+          if (['completed', 'received', 'closed', 'rejected'].includes(t.status)) return false;
+        }
       }
     } else if (statusTab === 'approved') {
+      if (isHandlerDeliveryPending) {
+        return false;
+      }
       let allowedStatuses = ['ready_for_dispatch', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'closed'];
       if (activeRole.role === 'team_lead') {
         allowedStatuses.push('tl_approved', 'mgt_approved');
@@ -610,10 +630,53 @@ const PendingTransactionsPage = () => {
     if (action === 'reject') {
       const reasonText = prompt('Please enter a rejection reason for this DC Conversion request:');
       if (reasonText === null) return; // Cancelled
-      reason = reasonText || 'Rejected by Team Lead';
+      reason = reasonText || 'Rejected';
     } else {
-      if (!confirm('Are you sure you want to approve this DC Conversion request? This will permanently CLOSE the barcode.')) {
+      const isInvoice = selectedItem.documentType === 'Invoice';
+      if (isInvoice && selectedItem.status === 'pending_accounts_approval') {
+        // Accounts Admin must upload invoice document
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'application/pdf,image/*';
+        
+        fileInput.onchange = async () => {
+          const file = fileInput.files[0];
+          if (!file) return;
+
+          setSubmitting(true);
+          setActionError('');
+          try {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            // Upload the invoice file
+            const uploadRes = await api.post('/upload', formData, {
+              headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            const invoiceUrl = uploadRes.data.url;
+
+            // Submit approval with invoiceUrl
+            await api.post(`/barcodes/close-requests/${requestId}/respond`, {
+              action: 'approve',
+              invoiceUrl
+            });
+
+            alert('Invoice uploaded and RDC closed successfully!');
+            setSelectedItem(null);
+            fetchApprovals();
+          } catch (err) {
+            setActionError(err.response?.data?.message || 'Failed to upload invoice and approve close request.');
+          } finally {
+            setSubmitting(false);
+          }
+        };
+
+        fileInput.click();
         return;
+      } else {
+        if (!confirm('Are you sure you want to approve this DC Conversion request?')) {
+          return;
+        }
       }
     }
 
@@ -822,6 +885,8 @@ const PendingTransactionsPage = () => {
   };
 
 
+  const showPricing = selectedItem && !['submitted', 'tl_approved', 'mgt_approved', 'ready_for_dispatch'].includes(selectedItem.status);
+
   return (
     <div className="flex flex-col gap-5 h-[calc(100vh-7rem)] overflow-hidden">
       {/* Top Action Header */}
@@ -861,7 +926,7 @@ const PendingTransactionsPage = () => {
             Return Requests ({pendingReturns.length})
           </button>
         )}
-        {(activeRole.role === 'super_admin' || activeRole.role === 'team_lead' || (activeRole.role === 'department_admin' && activeRole.adminType === 'accounts')) && (
+        {(activeRole.role === 'super_admin' || activeRole.role === 'team_lead' || activeRole.role === 'department_admin') && (
           <button onClick={() => setStatusTab('close_requests')} className={`pb-2.5 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${statusTab === 'close_requests' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-slate-400'}`}>
             {activeRole.role === 'department_admin' && activeRole.adminType === 'accounts' ? "Invoice Conversion" : "DC Conversion"} ({pendingCloseRequests.length})
           </button>
@@ -997,7 +1062,9 @@ const PendingTransactionsPage = () => {
                                 </span>
                                 <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 font-mono">{r.barcode}</span>
                               </div>
-                              <Badge variant="warning">PENDING</Badge>
+                              <Badge variant="warning">
+                                {r.status === 'pending_store_acceptance' ? 'AWAITING STORE' : 'PENDING'}
+                              </Badge>
                             </div>
                             <div>
                               <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Convert to {r.documentType}</h4>
@@ -1006,8 +1073,12 @@ const PendingTransactionsPage = () => {
                             </div>
                             <div className="mt-2 pt-1.5 border-t border-dashed border-slate-100 dark:border-slate-800 text-[10px] font-bold flex justify-between items-center text-slate-500">
                               <span className="text-rose-600 dark:text-rose-400 font-extrabold">
-                                {isInvoice ? (
-                                  (activeRole.role === 'department_admin' && activeRole.adminType === 'accounts') ? "Action Required: Approve Invoice" : "Tracking: Pending Accounts Approval"
+                                {r.status === 'pending_store_acceptance' ? (
+                                  (activeRole.role === 'department_admin' && activeRole.adminType === 'store') ? "Action Required: Store Accept" : "Tracking: Pending Store Acceptance"
+                                ) : r.status === 'pending_accounts_approval' ? (
+                                  (activeRole.role === 'department_admin' && activeRole.adminType === 'accounts') ? "Action Required: Upload Invoice" : "Tracking: Pending Accounts Approval"
+                                ) : ['DC FOC', 'Invoice'].includes(r.documentType) ? (
+                                  (activeRole.role === 'department_admin' && activeRole.adminType === 'management' && (r.managementApprover?._id || r.managementApprover || '').toString() === user?._id?.toString()) ? "Action Required: Management Approve" : "Tracking: Pending Management Approval"
                                 ) : (
                                   activeRole.role === 'team_lead' ? "Action Required: Approve Conversion" : "Tracking: Pending TL Approval"
                                 )}
@@ -1063,7 +1134,11 @@ const PendingTransactionsPage = () => {
 
                             <div className="flex items-center justify-between text-[9px] text-slate-400 font-extrabold uppercase mt-1">
                               <span>{t.documentType} Challan</span>
-                              <span className="text-slate-700 dark:text-slate-300 font-black">₹{t.grandTotal?.toLocaleString() || '0'}</span>
+                              <span className="text-slate-700 dark:text-slate-300 font-black">
+                                {!['submitted', 'tl_approved', 'mgt_approved', 'ready_for_dispatch'].includes(t.status)
+                                  ? `₹${t.grandTotal?.toLocaleString() || '0'}`
+                                  : 'Awaiting Dispatch'}
+                              </span>
                             </div>
                             <div className="mt-2 pt-1.5 border-t border-dashed border-slate-100 dark:border-slate-800 text-[10px] font-bold flex justify-between items-center text-slate-500">
                               <span className={`${getCardStatusLine(t).startsWith('Action') ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400'}`}>
@@ -1154,7 +1229,7 @@ const PendingTransactionsPage = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 text-xs font-semibold text-slate-600">
-                  <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div className="grid grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-955/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                     <div>
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">FROM OWNER</span>
                       <span className="font-bold text-slate-855 dark:text-slate-150">{selectedItem.fromUser?.fullName}</span>
@@ -1163,6 +1238,14 @@ const PendingTransactionsPage = () => {
                     <div>
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">ITEM CONDITION</span>
                       <span className="font-bold text-amber-700 uppercase font-mono">{selectedItem.condition}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block mb-0.5">EXPECTED RETURN</span>
+                      <span className="font-bold text-slate-805 dark:text-slate-150 font-mono">
+                        {txnExpectedReturnDates[selectedItem.transactionId] 
+                          ? new Date(txnExpectedReturnDates[selectedItem.transactionId]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : 'N/A'}
+                      </span>
                     </div>
                   </div>
 
@@ -1276,7 +1359,7 @@ const PendingTransactionsPage = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 text-xs font-semibold text-slate-600">
-                  <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div className="grid grid-cols-3 gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                     <div>
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">PARENT BARCODE</span>
                       <span className="font-bold text-blue-600 font-mono text-sm">{selectedItem.barcode}</span>
@@ -1285,6 +1368,14 @@ const PendingTransactionsPage = () => {
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">REQUESTED BY</span>
                       <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.requester?.fullName}</span>
                       <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">ID: {selectedItem.requester?.employeeId}</span>
+                    </div>
+                    <div>
+                      <span className="text-[9px] text-slate-400 font-bold block mb-0.5">EXPECTED RETURN</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-150 font-mono text-xs">
+                        {txnExpectedReturnDates[selectedItem.transactionId] 
+                          ? new Date(txnExpectedReturnDates[selectedItem.transactionId]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : 'N/A'}
+                      </span>
                     </div>
                   </div>
 
@@ -1340,9 +1431,58 @@ const PendingTransactionsPage = () => {
               </div>
             ) : (selectedItem.documentType && !selectedItem.materials) ? (() => {
               const isInvoice = selectedItem.documentType === 'Invoice';
-              const canApprove = isInvoice 
-                ? (activeRole.role === 'super_admin' || (activeRole.role === 'department_admin' && activeRole.adminType === 'accounts'))
-                : (activeRole.role === 'super_admin' || activeRole.role === 'team_lead');
+              const canApprove = (() => {
+                if (activeRole.role === 'super_admin') return true;
+                if (selectedItem.status === 'pending_store_acceptance') {
+                  return activeRole.role === 'department_admin' && activeRole.adminType === 'store';
+                }
+                if (isInvoice) {
+                  if (selectedItem.status === 'pending') {
+                    return activeRole.role === 'department_admin' && activeRole.adminType === 'management' && 
+                      (selectedItem.managementApprover?._id || selectedItem.managementApprover || '').toString() === user?._id?.toString();
+                  }
+                  if (selectedItem.status === 'pending_accounts_approval') {
+                    return activeRole.role === 'department_admin' && activeRole.adminType === 'accounts';
+                  }
+                  return false;
+                }
+                if (selectedItem.documentType === 'DC Internal') {
+                  return activeRole.role === 'team_lead';
+                }
+                if (selectedItem.documentType === 'DC FOC') {
+                  return activeRole.role === 'department_admin' && activeRole.adminType === 'management' &&
+                    (selectedItem.managementApprover?._id || selectedItem.managementApprover || '').toString() === user?._id?.toString();
+                }
+                return false;
+              })();
+
+              const getBadgeLabel = () => {
+                if (selectedItem.status === 'pending_store_acceptance') return 'PENDING STORE ACCEPTANCE';
+                if (isInvoice) {
+                  if (selectedItem.status === 'pending') return 'PENDING MANAGEMENT APPROVAL';
+                  if (selectedItem.status === 'pending_accounts_approval') return 'PENDING ACCOUNTS UPLOAD';
+                }
+                if (selectedItem.documentType === 'DC FOC') return 'PENDING MANAGEMENT APPROVAL';
+                return 'PENDING TL APPROVAL';
+              };
+
+              const getHelperText = () => {
+                if (selectedItem.status === 'pending_store_acceptance') return 'Only Store Admins can accept this request.';
+                if (isInvoice) {
+                  if (selectedItem.status === 'pending') return 'Only the selected Management Approver can approve this request.';
+                  if (selectedItem.status === 'pending_accounts_approval') return 'Only Accounts Admin can upload invoice and close.';
+                }
+                if (selectedItem.documentType === 'DC FOC') return 'Only the selected Management Approver can approve this request.';
+                return 'Only Team Leads can approve this request.';
+              };
+
+              const showRejectButton = selectedItem.status !== 'pending_store_acceptance';
+              const approveButtonText = selectedItem.status === 'pending_store_acceptance' 
+                ? 'Accept & Close Barcode' 
+                : (isInvoice 
+                    ? (selectedItem.status === 'pending_accounts_approval' ? 'Upload Invoice & Close' : 'Approve Request') 
+                    : 'Approve Request');
+
               return (
                 /* CLOSE REQUEST PREVIEW */
                 <div className="flex-1 flex flex-col overflow-hidden">
@@ -1353,7 +1493,7 @@ const PendingTransactionsPage = () => {
                           {isInvoice ? 'Invoice Conversion Request' : 'DC Conversion Request'}
                         </span>
                         <Badge variant="warning">
-                          {isInvoice ? 'PENDING ACCOUNTS APPROVAL' : 'PENDING TL APPROVAL'}
+                          {getBadgeLabel()}
                         </Badge>
                       </div>
                       <h3 className="text-base font-extrabold text-slate-855 mt-1">Barcode: {selectedItem.barcode}</h3>
@@ -1372,18 +1512,26 @@ const PendingTransactionsPage = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4 bg-slate-50 dark:bg-slate-955/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-955/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
                         <span className="text-[9px] text-slate-400 font-bold block mb-0.5">REQUESTER</span>
                         <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.requester?.fullName}</span>
                         <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">ID: {selectedItem.requester?.employeeId}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-slate-400 font-bold block mb-0.5">EXPECTED RETURN</span>
+                        <span className="font-bold text-slate-800 dark:text-slate-150 font-mono text-xs">
+                          {txnExpectedReturnDates[selectedItem.transactionId] 
+                            ? new Date(txnExpectedReturnDates[selectedItem.transactionId]).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                            : 'N/A'}
+                        </span>
                       </div>
                     </div>
 
                     {selectedItem.remarks && (
                       <div>
                         <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Remarks / Reason</h4>
-                        <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-950 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic">
+                        <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-955 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic">
                           "{selectedItem.remarks}"
                         </div>
                       </div>
@@ -1393,25 +1541,27 @@ const PendingTransactionsPage = () => {
 
                     {canApprove ? (
                       <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex gap-3 justify-end shrink-0">
-                        <Button
-                          variant="outline"
-                          className="text-rose-600 border-rose-200 hover:bg-rose-50"
-                          onClick={() => handleCloseRequestAction('reject', selectedItem._id)}
-                          disabled={submitting}
-                        >
-                          Reject Request
-                        </Button>
+                        {showRejectButton && (
+                          <Button
+                            variant="outline"
+                            className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                            onClick={() => handleCloseRequestAction('reject', selectedItem._id)}
+                            disabled={submitting}
+                          >
+                            Reject Request
+                          </Button>
+                        )}
                         <Button
                           variant="success"
                           onClick={() => handleCloseRequestAction('approve', selectedItem._id)}
                           disabled={submitting}
                         >
-                          Approve & Close Barcode
+                          {approveButtonText}
                         </Button>
                       </div>
                     ) : (
                       <p className="text-xs text-slate-400 italic text-center mt-auto pt-5 border-t">
-                        {isInvoice ? 'Only Accounts Department Admin can approve this request.' : 'Only Team Leads can approve this request.'}
+                        {getHelperText()}
                       </p>
                     )}
                   </div>
@@ -1535,7 +1685,9 @@ const PendingTransactionsPage = () => {
                     </div>
                     <div>
                       <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">GRAND TOTAL</span>
-                      <span className="font-extrabold text-blue-650 dark:text-blue-400">₹{selectedItem.grandTotal?.toLocaleString() || '0'}</span>
+                      <span className="font-extrabold text-blue-650 dark:text-blue-400">
+                        {showPricing ? `₹${selectedItem.grandTotal?.toLocaleString() || '0'}` : 'Awaiting Dispatch'}
+                      </span>
                     </div>
                   </div>
 
@@ -1548,7 +1700,7 @@ const PendingTransactionsPage = () => {
                           <tr>
                             <th className="px-4 py-2">Material</th>
                             <th className="px-4 py-2">Quantity</th>
-                            <th className="px-4 py-2 text-right">Unit Price</th>
+                            {showPricing && <th className="px-4 py-2 text-right">Unit Price</th>}
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1559,7 +1711,7 @@ const PendingTransactionsPage = () => {
                                 {mat.description && <span className="block text-[10px] text-slate-400 mt-0.5 font-medium">{mat.description}</span>}
                               </td>
                               <td className="px-4 py-2.5 font-semibold text-slate-700 dark:text-slate-300">{mat.quantity} {mat.unit || 'pcs'}</td>
-                              <td className="px-4 py-2.5 text-right font-bold text-slate-800 dark:text-slate-200">₹{mat.price?.toLocaleString() || '0'}</td>
+                              {showPricing && <td className="px-4 py-2.5 text-right font-bold text-slate-800 dark:text-slate-200">₹{mat.price?.toLocaleString() || '0'}</td>}
                             </tr>
                           ))}
                         </tbody>
@@ -1568,7 +1720,7 @@ const PendingTransactionsPage = () => {
                   </div>
 
                   {/* Approval Comments Form (only if status is pending) */}
-                  {statusTab === 'pending' && activeRole.role !== 'employee' && !isHandler && (
+                  {statusTab === 'pending' && activeRole.role !== 'employee' && !isHandler && ['submitted', 'tl_approved', 'mgt_approved', 'ready_for_dispatch', 'store_accepted'].includes(selectedItem.status) && (
                     <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
                       {((activeRole.role === 'department_admin' && activeRole.adminType === 'store') ||
                         (activeRole.role === 'super_admin' && ['mgt_approved', 'ready_for_dispatch', 'store_accepted'].includes(selectedItem.status))) ? (

@@ -136,6 +136,79 @@ const buildReportFilter = async (req) => {
 exports.getTransactionReport = async (req, res) => {
   try {
     const { reportType = 'transaction' } = req.query;
+    if (reportType === 'conversions') {
+      const CloseRequest = require('../models/CloseRequest');
+      const Barcode = require('../models/Barcode');
+      const { barcode: bcQuery, startDate, endDate, sender, documentType, department } = req.query;
+      
+      const convFilter = { status: 'approved' };
+
+      if (documentType && documentType !== 'all' && documentType !== '') {
+        convFilter.documentType = documentType;
+      } else {
+        convFilter.documentType = { $in: ['DC Internal', 'DC FOC', 'Invoice'] };
+      }
+
+      if (bcQuery && bcQuery.trim()) {
+        convFilter.barcode = { $regex: bcQuery.trim().toUpperCase(), $options: 'i' };
+      }
+
+      if (sender) {
+        convFilter.requester = sender;
+      }
+
+      if (startDate && endDate) {
+        convFilter.approvedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      }
+
+      if (req.user.role === 'employee') {
+        convFilter.requester = req.user._id;
+      } else if (req.user.role === 'team_lead') {
+        const User = require('../models/User');
+        const deptUsers = await User.find({ department: req.user.department }).select('_id');
+        const deptUserIds = deptUsers.map(u => u._id);
+        convFilter.requester = { $in: deptUserIds };
+      } else if (req.user.role === 'department_admin') {
+        if (req.user.departmentAdminType !== 'store' && req.user.departmentAdminType !== 'management' && req.user.departmentAdminType !== 'accounts') {
+          const User = require('../models/User');
+          const deptUsers = await User.find({ department: req.user.department }).select('_id');
+          const deptUserIds = deptUsers.map(u => u._id);
+          convFilter.requester = { $in: deptUserIds };
+        }
+      }
+
+      if (department && department !== 'all' && department !== '' && req.user.role !== 'employee' && req.user.role !== 'team_lead') {
+        const User = require('../models/User');
+        const deptUsers = await User.find({ department }).select('_id');
+        const deptUserIds = deptUsers.map(u => u._id);
+        convFilter.requester = { $in: deptUserIds };
+      }
+
+      const conversions = await CloseRequest.find(convFilter)
+        .populate('requester', 'fullName employeeId department')
+        .populate('approvedBy', 'fullName employeeId')
+        .sort({ approvedAt: -1 });
+
+      const enrichedConversions = [];
+      for (const conv of conversions) {
+        const bc = await Barcode.findOne({ barcode: conv.barcode });
+        enrichedConversions.push({
+          ...conv.toObject(),
+          materialName: bc ? bc.materialName : 'N/A'
+        });
+      }
+
+      return res.json({
+        data: enrichedConversions,
+        report: enrichedConversions,
+        summary: {
+          totalTransactions: enrichedConversions.length,
+          totalValue: enrichedConversions.filter(c => c.documentType === 'Invoice').length,
+          avgValue: enrichedConversions.filter(c => c.documentType !== 'Invoice').length
+        },
+        total: enrichedConversions.length
+      });
+    }
 
     if (reportType === 'returns') {
       const Return = require('../models/Return');
@@ -244,7 +317,90 @@ exports.exportTransactionReport = async (req, res) => {
     const { reportType = 'transaction' } = req.query;
     const workbook = new ExcelJS.Workbook();
 
-    if (reportType === 'returns') {
+    if (reportType === 'conversions') {
+      const CloseRequest = require('../models/CloseRequest');
+      const Barcode = require('../models/Barcode');
+      const { barcode: bcQuery, startDate, endDate, sender, documentType, department } = req.query;
+      
+      const convFilter = { status: 'approved' };
+
+      if (documentType && documentType !== 'all' && documentType !== '') {
+        convFilter.documentType = documentType;
+      } else {
+        convFilter.documentType = { $in: ['DC Internal', 'DC FOC', 'Invoice'] };
+      }
+
+      if (bcQuery && bcQuery.trim()) {
+        convFilter.barcode = { $regex: bcQuery.trim().toUpperCase(), $options: 'i' };
+      }
+
+      if (sender) {
+        convFilter.requester = sender;
+      }
+
+      if (startDate && endDate) {
+        convFilter.approvedAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+      }
+
+      if (req.user.role === 'employee') {
+        convFilter.requester = req.user._id;
+      } else if (req.user.role === 'team_lead') {
+        const User = require('../models/User');
+        const deptUsers = await User.find({ department: req.user.department }).select('_id');
+        const deptUserIds = deptUsers.map(u => u._id);
+        convFilter.requester = { $in: deptUserIds };
+      } else if (req.user.role === 'department_admin') {
+        if (req.user.departmentAdminType !== 'store' && req.user.departmentAdminType !== 'management' && req.user.departmentAdminType !== 'accounts') {
+          const User = require('../models/User');
+          const deptUsers = await User.find({ department: req.user.department }).select('_id');
+          const deptUserIds = deptUsers.map(u => u._id);
+          convFilter.requester = { $in: deptUserIds };
+        }
+      }
+
+      if (department && department !== 'all' && department !== '' && req.user.role !== 'employee' && req.user.role !== 'team_lead') {
+        const User = require('../models/User');
+        const deptUsers = await User.find({ department }).select('_id');
+        const deptUserIds = deptUsers.map(u => u._id);
+        convFilter.requester = { $in: deptUserIds };
+      }
+
+      const conversions = await CloseRequest.find(convFilter)
+        .populate('requester', 'fullName employeeId department')
+        .populate('approvedBy', 'fullName employeeId')
+        .sort({ approvedAt: -1 });
+
+      const sheet = workbook.addWorksheet('DC & Invoice Conversions');
+      sheet.columns = [
+        { header: 'Transaction ID', key: 'transactionId', width: 20 },
+        { header: 'Barcode', key: 'barcode', width: 15 },
+        { header: 'Material Name', key: 'materialName', width: 25 },
+        { header: 'Document Type', key: 'documentType', width: 15 },
+        { header: 'Document Number', key: 'documentNumber', width: 18 },
+        { header: 'Remarks', key: 'remarks', width: 30 },
+        { header: 'Requester Name', key: 'requesterName', width: 25 },
+        { header: 'Employee ID', key: 'employeeId', width: 15 },
+        { header: 'Approved/Closed By', key: 'approvedBy', width: 25 },
+        { header: 'Closed Date', key: 'closedDate', width: 20 }
+      ];
+
+      for (const c of conversions) {
+        const bc = await Barcode.findOne({ barcode: c.barcode });
+        sheet.addRow({
+          transactionId: c.transactionId,
+          barcode: c.barcode,
+          materialName: bc ? bc.materialName : 'N/A',
+          documentType: c.documentType,
+          documentNumber: c.documentNumber,
+          remarks: c.remarks || '',
+          requesterName: c.requester?.fullName || 'N/A',
+          employeeId: c.requester?.employeeId || 'N/A',
+          approvedBy: c.approvedBy?.fullName || 'N/A',
+          closedDate: c.approvedAt ? c.approvedAt.toLocaleDateString() : 'N/A'
+        });
+      }
+      sheet.getRow(1).font = { bold: true };
+    } else if (reportType === 'returns') {
       const Return = require('../models/Return');
       const { status, barcode, startDate, endDate, handler } = req.query;
       const returnFilter = {};
@@ -383,6 +539,67 @@ exports.exportTransactionReport = async (req, res) => {
     res.end();
   } catch (error) {
     console.error('Export error:', error);
+    res.status(500).json({ message: 'Server error.' });
+  }
+};
+
+exports.exportDcEmployeeReport = async (req, res) => {
+  try {
+    const { employeeId } = req.query;
+    if (!employeeId) {
+      return res.status(400).json({ message: 'Employee ID is required.' });
+    }
+
+    const CloseRequest = require('../models/CloseRequest');
+    const Barcode = require('../models/Barcode');
+
+    // Find all approved CloseRequests for this employee that are 'DC Internal' or 'DC FOC'
+    const closeRequests = await CloseRequest.find({
+      requester: employeeId,
+      status: 'approved',
+      documentType: { $in: ['DC Internal', 'DC FOC'] }
+    }).populate('requester').populate('approvedBy');
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet('DC Report');
+
+    sheet.columns = [
+      { header: 'Transaction ID', key: 'transactionId', width: 20 },
+      { header: 'Barcode', key: 'barcode', width: 15 },
+      { header: 'Material Name', key: 'materialName', width: 25 },
+      { header: 'Document Type', key: 'documentType', width: 15 },
+      { header: 'Document Number', key: 'documentNumber', width: 18 },
+      { header: 'Remarks', key: 'remarks', width: 30 },
+      { header: 'Requester Name', key: 'requesterName', width: 25 },
+      { header: 'Employee ID', key: 'employeeId', width: 15 },
+      { header: 'Approved By', key: 'approvedBy', width: 25 },
+      { header: 'Closed Date', key: 'closedDate', width: 20 }
+    ];
+
+    for (const reqObj of closeRequests) {
+      const bc = await Barcode.findOne({ barcode: reqObj.barcode });
+      sheet.addRow({
+        transactionId: reqObj.transactionId,
+        barcode: reqObj.barcode,
+        materialName: bc ? bc.materialName : 'N/A',
+        documentType: reqObj.documentType,
+        documentNumber: reqObj.documentNumber,
+        remarks: reqObj.remarks || '',
+        requesterName: reqObj.requester?.fullName || 'N/A',
+        employeeId: reqObj.requester?.employeeId || 'N/A',
+        approvedBy: reqObj.approvedBy?.fullName || 'N/A',
+        closedDate: reqObj.approvedAt ? reqObj.approvedAt.toLocaleDateString() : 'N/A'
+      });
+    }
+
+    sheet.getRow(1).font = { bold: true };
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=MMS_DC_Report_${employeeId}.xlsx`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export DC employee report error:', error);
     res.status(500).json({ message: 'Server error.' });
   }
 };

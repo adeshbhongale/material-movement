@@ -4,10 +4,12 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { ArrowLeft, Camera, ShieldCheck } from 'lucide-react';
 import api from '../lib/api';
 import GeoCamera from '../components/geo-camera/GeoCamera';
+import useAuthStore from '../store/authStore';
 
 export default function TransferMaterial() {
   const { barcode } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [toUserId, setToUserId] = useState('');
   const [remarks, setRemarks] = useState('');
   const [requiresApproval, setRequiresApproval] = useState(false);
@@ -34,9 +36,13 @@ export default function TransferMaterial() {
     }
   });
 
-  const handleCapturePhoto = (dataUrl, metadata) => {
-    setCapturedPhoto(dataUrl);
-    setPhotoMeta(metadata);
+  const handleCapturePhoto = (uploadData) => {
+    if (uploadData && typeof uploadData === 'object' && uploadData.url) {
+      setCapturedPhoto(uploadData.url);
+      setPhotoMeta(uploadData.metadata);
+    } else {
+      setCapturedPhoto(uploadData);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -82,7 +88,7 @@ export default function TransferMaterial() {
             required
           >
             <option value="">Select Recipient</option>
-            {employees?.map(e => (
+            {employees?.filter(e => e._id !== user?._id && e.role !== 'super_admin').map(e => (
               <option key={e._id} value={e._id}>{e.fullName} ({e.department?.name})</option>
             ))}
           </select>
@@ -103,7 +109,7 @@ export default function TransferMaterial() {
 
         {/* Live Photo Attachment */}
         <div className="space-y-2">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase">Live Photo with Metadata Overlay</label>
+          <label className="block text-[10px] font-bold text-slate-555 uppercase">Live Photo with Metadata Overlay</label>
           {capturedPhoto ? (
             <div className="relative border border-slate-200 rounded-2xl overflow-hidden aspect-video w-64 bg-slate-100">
               <img src={capturedPhoto} alt="Captured preview" className="w-full h-full object-cover" />
@@ -127,6 +133,12 @@ export default function TransferMaterial() {
         </div>
 
         {/* Submit */}
+        {transferMutation.isError && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-semibold text-red-400">
+            {transferMutation.error?.response?.data?.message || 'Failed to submit transfer request.'}
+          </div>
+        )}
+
         <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
           <button
             type="button"

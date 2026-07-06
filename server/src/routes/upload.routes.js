@@ -5,5 +5,6 @@ const auth = require('../middleware/auth');
 
 router.use(auth);
 router.post('/', uploadController.uploadMiddleware, uploadController.uploadFile);
+router.post('/base64', uploadController.uploadBase64);
 
 module.exports = router;

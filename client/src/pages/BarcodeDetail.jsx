@@ -31,6 +31,8 @@ export default function BarcodeDetail() {
   const [barcodeCloseDocNumber, setBarcodeCloseDocNumber] = useState('');
   const [barcodeCloseRemarks, setBarcodeCloseRemarks] = useState('');
   const [barcodeCloseSubmitting, setBarcodeCloseSubmitting] = useState(false);
+  const [managementUsers, setManagementUsers] = useState([]);
+  const [selectedManagementId, setSelectedManagementId] = useState('');
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['barcodeDetail', barcode],
@@ -47,6 +49,14 @@ export default function BarcodeDetail() {
       return res.data.user;
     }
   });
+
+  useEffect(() => {
+    api.get('/employees?limit=1000&allDepartments=true').then(res => {
+      const empList = res.data.employees || res.data.data || [];
+      const mgtList = empList.filter(e => e.role === 'department_admin' && e.departmentAdminType === 'management' && e._id !== userData?._id && e.role !== 'super_admin');
+      setManagementUsers(mgtList.map(m => ({ value: m._id, label: `${m.fullName} (${m.employeeId})` })));
+    }).catch(err => console.error(err));
+  }, [userData]);
 
   const fetchChat = async (txnId) => {
     if (!txnId) return;
@@ -120,6 +130,25 @@ export default function BarcodeDetail() {
     return true;
   }) || [];
 
+  const timelineHistory = [...filteredHistory];
+  if (bc?.closeRequest) {
+    if (bc.closeRequest.status === 'pending_accounts_approval') {
+      timelineHistory.push({
+        action: 'Pending Accounts Upload',
+        user: { fullName: 'Accounts Admin' },
+        timestamp: bc.closeRequest.updatedAt || new Date().toISOString(),
+        remarks: 'Awaiting invoice document upload to close transaction'
+      });
+    } else if (bc.closeRequest.status === 'pending_store_acceptance') {
+      timelineHistory.push({
+        action: 'Pending Store Acceptance',
+        user: { fullName: 'Store Admin' },
+        timestamp: bc.closeRequest.updatedAt || new Date().toISOString(),
+        remarks: 'Awaiting store confirmation of the conversion request'
+      });
+    }
+  }
+
   const handleAcceptSplit = async () => {
     setAccepting(true);
     try {
@@ -143,15 +172,20 @@ export default function BarcodeDetail() {
       alert('Please enter a document number.');
       return;
     }
+    if (['DC FOC', 'Invoice'].includes(barcodeCloseDocType) && !selectedManagementId) {
+      alert('Please select a management approver.');
+      return;
+    }
     setBarcodeCloseSubmitting(true);
     try {
       await api.post('/barcodes/close-request', {
         barcode,
         documentType: barcodeCloseDocType,
         documentNumber: barcodeCloseDocNumber,
-        remarks: barcodeCloseRemarks
+        remarks: barcodeCloseRemarks,
+        managementApprover: ['DC FOC', 'Invoice'].includes(barcodeCloseDocType) ? selectedManagementId : undefined
       });
-      alert('Close request submitted successfully for Team Lead approval!');
+      alert('Close request submitted successfully!');
       setBarcodeCloseModal(false);
       refetch();
     } catch (err) {
@@ -211,6 +245,9 @@ export default function BarcodeDetail() {
           ) && (
             !transfers || 
             !transfers.some(t => ['pending', 'approved'].includes(t.status))
+          ) && (
+            !bc.closeRequest || 
+            !['pending_accounts_approval', 'pending_store_acceptance'].includes(bc.closeRequest.status)
           ) && (
             <>
               <Button size="sm" variant="outline" onClick={() => navigate(`/barcodes/${bc.barcode}/split`)}>
@@ -421,9 +458,154 @@ export default function BarcodeDetail() {
               <div className="absolute left-[92px] top-4 bottom-4 w-0.5 bg-emerald-600" />
 
               <div className="flex flex-col gap-8">
-                {filteredHistory.map((log, idx) => {
+                {timelineHistory.map((log, idx) => {
                   const logDate = new Date(log.timestamp);
-                  const isTransfer = log.action.toLowerCase().includes('transfer');
+                  const actionLower = log.action.toLowerCase();
+                  const isTransfer = actionLower.includes('transfer');
+                  const isReturn = actionLower.includes('return');
+                  const isSplit = actionLower.includes('split');
+                  const isClose = actionLower.includes('close') || actionLower.includes('closed') || actionLower.includes('approval') || actionLower.includes('upload') || actionLower.includes('conversion');
+
+                  const hasLaterCompletion = timelineHistory.slice(idx + 1).some(laterH => {
+                    const latAct = laterH.action.toLowerCase();
+                    return latAct.includes('accepted') || 
+                           latAct.includes('completed') || 
+                           latAct.includes('approved') || 
+                           latAct.includes('rejected') || 
+                           latAct.includes('closed') ||
+                           latAct.includes('returned') ||
+                           latAct.includes('first approval') ||
+                           latAct.includes('approval');
+                  });
+
+                  let actionLabel = log.action;
+                  let statusLabel = 'COMPLETED';
+                  let byLabel = log.user?.fullName || 'System';
+
+                  if (isTransfer) {
+                    actionLabel = `${log.action} for ${bc.barcode}`;
+                    if (actionLower.includes('accepted') || actionLower.includes('approved')) {
+                      statusLabel = 'ACCEPTED';
+                      byLabel = `Accepted by: ${log.user?.fullName || 'Operator'}`;
+                    } else if (actionLower.includes('rejected')) {
+                      statusLabel = 'REJECTED';
+                      byLabel = `Rejected by: ${log.user?.fullName || 'Operator'}`;
+                    } else {
+                      statusLabel = hasLaterCompletion ? 'ACCEPTED' : 'PENDING';
+                      if (statusLabel === 'PENDING') {
+                        if (actionLower.includes('pending acceptance')) {
+                          byLabel = `Pending Acceptance by: ${log.user?.fullName || 'Recipient'}`;
+                        } else {
+                          byLabel = `Pending Approval`;
+                        }
+                      } else {
+                        byLabel = `Initiated by: ${log.user?.fullName || 'Operator'}`;
+                      }
+                    }
+                  } else if (isSplit) {
+                    actionLabel = `${log.action} for ${bc.barcode}`;
+                    if (actionLower.includes('accepted') || actionLower.includes('approved') || actionLower.includes('completed')) {
+                      statusLabel = 'ACCEPTED';
+                      byLabel = `Accepted by: ${log.user?.fullName || 'Operator'}`;
+                    } else if (actionLower.includes('rejected')) {
+                      statusLabel = 'REJECTED';
+                      byLabel = `Rejected by: ${log.user?.fullName || 'Operator'}`;
+                    } else {
+                      statusLabel = hasLaterCompletion ? 'ACCEPTED' : 'PENDING';
+                      if (statusLabel === 'PENDING') {
+                        byLabel = 'Pending Store Approval';
+                      } else {
+                        byLabel = `Initiated by: ${log.user?.fullName || 'Operator'}`;
+                      }
+                    }
+                  } else if (isReturn) {
+                    actionLabel = `${log.action} for ${bc.barcode}`;
+                    if (actionLower.includes('accepted') || actionLower.includes('completed') || actionLower.includes('returned')) {
+                      statusLabel = 'ACCEPTED';
+                      byLabel = `Accepted by: ${log.user?.fullName || 'Operator'}`;
+                    } else if (actionLower.includes('rejected')) {
+                      statusLabel = 'REJECTED';
+                      byLabel = `Rejected by: ${log.user?.fullName || 'Operator'}`;
+                    } else {
+                      statusLabel = hasLaterCompletion ? 'ACCEPTED' : 'PENDING';
+                      if (statusLabel === 'PENDING') {
+                        if (actionLower.includes('requested')) {
+                          byLabel = `Pending Return Collection by Handler`;
+                        } else if (actionLower.includes('collected')) {
+                          byLabel = `Pending Handover to Store by: ${log.user?.fullName || 'Handler'}`;
+                        } else if (actionLower.includes('handed over')) {
+                          byLabel = `Pending Store Acceptance`;
+                        } else {
+                          byLabel = 'Pending Return';
+                        }
+                      } else {
+                        if (actionLower.includes('collected')) {
+                          byLabel = `Collected by: ${log.user?.fullName || 'Handler'}`;
+                        } else if (actionLower.includes('handed over')) {
+                          byLabel = `Handed over by: ${log.user?.fullName || 'Handler'}`;
+                        } else {
+                          byLabel = `Initiated by: ${log.user?.fullName || 'Operator'}`;
+                        }
+                      }
+                    }
+                  } else if (isClose) {
+                    actionLabel = `${log.action} for ${bc.barcode}`;
+                    if (actionLower.includes('closed') || actionLower.includes('completed')) {
+                      statusLabel = 'APPROVED';
+                      byLabel = `Approved by: ${log.user?.fullName || 'Operator'}`;
+                    } else if (actionLower.includes('rejected') || actionLower.includes('declined')) {
+                      statusLabel = 'REJECTED';
+                      byLabel = `Rejected by: ${log.user?.fullName || 'Operator'}`;
+                    } else if (log.action === 'First Approval') {
+                      const isApproved = ['pending_accounts_approval', 'pending_store_acceptance', 'approved'].includes(bc.closeRequest?.status);
+                      statusLabel = isApproved ? 'APPROVED' : 'PENDING';
+                      if (statusLabel === 'PENDING') {
+                        if (bc.closeRequest?.managementApprover) {
+                          byLabel = `Pending Management Approval by: ${bc.closeRequest.managementApprover.fullName}`;
+                        } else {
+                          byLabel = 'Pending Approval';
+                        }
+                      } else {
+                        byLabel = `Approved by Management: ${log.user?.fullName || 'Approver'}`;
+                      }
+                    } else if (log.action === 'Close Requested') {
+                      const isAccepted = ['pending_accounts_approval', 'pending_store_acceptance', 'approved'].includes(bc.closeRequest?.status);
+                      statusLabel = isAccepted ? 'ACCEPTED' : 'PENDING';
+                      if (statusLabel === 'PENDING') {
+                        if (bc.closeRequest?.managementApprover) {
+                          byLabel = `Pending Management Approval by: ${bc.closeRequest.managementApprover.fullName}`;
+                        } else {
+                          byLabel = 'Pending Approval';
+                        }
+                      } else {
+                        byLabel = `Initiated by: ${log.user?.fullName || 'Operator'}`;
+                      }
+                    } else if (actionLower.includes('pending')) {
+                      statusLabel = 'PENDING';
+                      byLabel = log.user?.fullName || 'Pending Action';
+                    } else {
+                      statusLabel = hasLaterCompletion ? 'APPROVED' : 'PENDING';
+                      if (statusLabel === 'PENDING') {
+                        if (bc.closeRequest?.status === 'pending_accounts_approval') {
+                          byLabel = 'Pending Accounts Approval';
+                        } else if (bc.closeRequest?.status === 'pending_store_acceptance') {
+                          byLabel = 'Pending Store Acceptance';
+                        } else if (bc.closeRequest?.managementApprover) {
+                          byLabel = `Pending Management Approval by: ${bc.closeRequest.managementApprover.fullName}`;
+                        } else {
+                          byLabel = 'Pending Approval';
+                        }
+                      } else {
+                        byLabel = `Initiated by: ${log.user?.fullName || 'Operator'}`;
+                      }
+                    }
+                  }
+
+                  let circleColor = 'bg-emerald-600';
+                  if (isTransfer) circleColor = 'bg-orange-500';
+                  else if (isReturn) circleColor = 'bg-rose-500';
+                  else if (isSplit) circleColor = 'bg-indigo-500';
+                  else if (isClose) circleColor = 'bg-blue-500';
 
                   return (
                     <div key={idx} className="relative flex items-start">
@@ -432,21 +614,33 @@ export default function BarcodeDetail() {
                         <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold uppercase tracking-wide">
                           {logDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </span>
-                        <span className="text-[9px] text-slate-405 block font-bold">
+                        <span className="text-[9px] text-slate-400 block font-bold">
                           {logDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
                         </span>
                       </div>
 
                       {/* Middle: Stepper circle node exactly centered on the line */}
-                      <span className={`absolute left-[-22px] top-[4px] w-3 h-3 rounded-full ${isTransfer ? 'bg-orange-500' : 'bg-emerald-600'} border-2 border-white dark:border-slate-900 z-10`} />
+                      <span className={`absolute left-[-22px] top-[4px] w-3 h-3 rounded-full ${circleColor} border-2 border-white dark:border-slate-900 z-10`} />
 
                       {/* Right side: Action details */}
                       <div className="pl-4">
-                        <h5 className="text-xs font-black text-slate-800 dark:text-slate-100 font-sans leading-snug">
-                          {log.action}
-                        </h5>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h5 className="text-xs font-black text-slate-800 dark:text-slate-100 font-sans leading-snug">
+                            {actionLabel}
+                          </h5>
+                          <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm
+                            ${statusLabel === 'PENDING'
+                              ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
+                              : statusLabel === 'REJECTED'
+                                ? 'bg-rose-500/10 text-rose-500 dark:bg-rose-950/20'
+                                : 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-950/20'
+                            }
+                          `}>
+                            {statusLabel}
+                          </span>
+                        </div>
                         <p className="text-[10px] text-slate-500 font-medium italic mt-0.5">
-                          By: {log.user?.fullName || 'System'}
+                          By: {byLabel} {log.remarks ? `— ${log.remarks}` : ''}
                         </p>
                       </div>
                     </div>
@@ -512,6 +706,23 @@ export default function BarcodeDetail() {
                     </select>
                   )}
                 </div>
+
+                {['DC FOC', 'Invoice'].includes(barcodeCloseDocType) && (
+                  <div>
+                    <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Choose Management Approver *</label>
+                    <select
+                      value={selectedManagementId}
+                      onChange={(e) => setSelectedManagementId(e.target.value)}
+                      required
+                      className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 dark:text-white rounded-lg px-3 py-2.5 font-semibold focus:outline-none"
+                    >
+                      <option value="">Select Management Admin...</option>
+                      {managementUsers.map(u => (
+                        <option key={u.value} value={u.value}>{u.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">New Document Number *</label>

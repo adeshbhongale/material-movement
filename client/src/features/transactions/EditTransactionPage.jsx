@@ -43,8 +43,8 @@ const EditTransactionPage = () => {
         const employeesList = empRes.data.employees || empRes.data.data || [];
         setMgtApprovers(
           employeesList
-            .filter(a => a.role === 'department_admin' && a.departmentAdminType === 'management')
-            .map(emp => ({ value: emp._id, label: `${emp.fullName} (${emp.employeeId})` }))
+            .filter((emp) => emp.role === 'department_admin' && emp.departmentAdminType === 'management' && emp._id !== user?._id && emp.role !== 'super_admin')
+            .map((emp) => ({ value: emp._id, label: `${emp.fullName} (${emp.employeeId})` }))
         );
 
         const txnData = txnRes.data.data || txnRes.data.transaction;
@@ -56,11 +56,7 @@ const EditTransactionPage = () => {
           return;
         }
 
-        setExpectedReturnDate(
-          txnData.expectedReturnDate
-            ? new Date(txnData.expectedReturnDate).toISOString().substring(0, 10)
-            : ''
-        );
+        setExpectedReturnDate('');
         setDescription(txnData.description || '');
         setSelectedMgt(txnData.managementApprover?._id || txnData.managementApprover || '');
 

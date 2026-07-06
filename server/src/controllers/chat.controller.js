@@ -13,16 +13,46 @@ exports.getMessages = async (req, res) => {
     const txn = await Transaction.findOne({ transactionId });
     if (!txn) return res.status(404).json({ message: 'Transaction not found.' });
 
-    if (txn.chatLocked) {
-      // Still allow reading, just mark as locked
+    let chatLocked = txn.chatLocked;
+
+    // Lock chat dynamically for any employee user if they have no active materials/assignments left, except team lead
+    const isTeamLead = (txn.teamLead?._id || txn.teamLead)?.toString() === req.user._id.toString();
+    if (req.user.role === 'employee' && !isTeamLead) {
+      const activePostDispatch = ['dispatched', 'received', 'active', 'partially_returned', 'closed', 'completed'];
+      if (activePostDispatch.includes(txn.status)) {
+        const Barcode = require('../models/Barcode');
+        const Return = require('../models/Return');
+        
+        const [txnBarcodes, returns] = await Promise.all([
+          Barcode.find({ transactionId: txn.transactionId }),
+          Return.find({ transactionId: txn.transactionId })
+        ]);
+
+        const hasActiveMaterial = txnBarcodes.some(b => 
+          (b.owner?._id || b.owner)?.toString() === req.user._id.toString() &&
+          ['Active', 'pending_acceptance'].includes(b.status)
+        );
+
+        const hasActiveReturnAssignment = returns.some(r => 
+          (r.returnHandler?._id || r.returnHandler)?.toString() === req.user._id.toString() &&
+          r.status !== 'completed'
+        );
+
+        const isPendingDispatchHandler = (txn.handler?._id || txn.handler)?.toString() === req.user._id.toString() &&
+          ['store_accepted', 'handler_assigned'].includes(txn.status);
+
+        if (!hasActiveMaterial && !hasActiveReturnAssignment && !isPendingDispatchHandler) {
+          chatLocked = true;
+        }
+      }
     }
 
     let isMember =
-      txn.chatMembers.some((m) => m.toString() === req.user._id.toString()) ||
+      txn.chatMembers.some((m) => (m._id || m).toString() === req.user._id.toString()) ||
       req.user.role === 'super_admin' ||
-      txn.requester.toString() === req.user._id.toString() ||
-      txn.teamLead?.toString() === req.user._id.toString() ||
-      txn.handler?.toString() === req.user._id.toString() ||
+      (txn.requester?._id || txn.requester)?.toString() === req.user._id.toString() ||
+      (txn.teamLead?._id || txn.teamLead)?.toString() === req.user._id.toString() ||
+      (txn.handler?._id || txn.handler)?.toString() === req.user._id.toString() ||
       (req.user.role === 'department_admin' && req.user.departmentAdminType === 'store') ||
       (req.user.role === 'department_admin' && req.user.departmentAdminType === 'management');
 
@@ -49,7 +79,7 @@ exports.getMessages = async (req, res) => {
       .populate('sender', 'fullName employeeId profilePhoto role')
       .sort({ createdAt: 1 });
 
-    res.json({ messages, chatLocked: txn.chatLocked, members: txn.chatMembers });
+    res.json({ messages, chatLocked, members: txn.chatMembers });
   } catch (error) {
     res.status(500).json({ message: 'Server error.' });
   }
@@ -70,16 +100,50 @@ exports.sendMessage = async (req, res) => {
     const txn = await Transaction.findOne({ transactionId });
     if (!txn) return res.status(404).json({ message: 'Transaction not found.' });
 
-    if (txn.chatLocked) {
-      return res.status(403).json({ message: 'Chat is locked. Transaction is closed.' });
+    let chatLocked = txn.chatLocked;
+
+    // Lock chat dynamically for any employee user if they have no active materials/assignments left, except team lead
+    const isTeamLead = (txn.teamLead?._id || txn.teamLead)?.toString() === req.user._id.toString();
+    if (req.user.role === 'employee' && !isTeamLead) {
+      const activePostDispatch = ['dispatched', 'received', 'active', 'partially_returned', 'closed', 'completed'];
+      if (activePostDispatch.includes(txn.status)) {
+        const Barcode = require('../models/Barcode');
+        const Return = require('../models/Return');
+        
+        const [txnBarcodes, returns] = await Promise.all([
+          Barcode.find({ transactionId: txn.transactionId }),
+          Return.find({ transactionId: txn.transactionId })
+        ]);
+
+        const hasActiveMaterial = txnBarcodes.some(b => 
+          (b.owner?._id || b.owner)?.toString() === req.user._id.toString() &&
+          ['Active', 'pending_acceptance'].includes(b.status)
+        );
+
+        const hasActiveReturnAssignment = returns.some(r => 
+          (r.returnHandler?._id || r.returnHandler)?.toString() === req.user._id.toString() &&
+          r.status !== 'completed'
+        );
+
+        const isPendingDispatchHandler = (txn.handler?._id || txn.handler)?.toString() === req.user._id.toString() &&
+          ['store_accepted', 'handler_assigned'].includes(txn.status);
+
+        if (!hasActiveMaterial && !hasActiveReturnAssignment && !isPendingDispatchHandler) {
+          chatLocked = true;
+        }
+      }
+    }
+
+    if (chatLocked) {
+      return res.status(403).json({ message: 'Chat is locked or disabled for this transaction.' });
     }
 
     let isMember =
-      txn.chatMembers.some((m) => m.toString() === req.user._id.toString()) ||
+      txn.chatMembers.some((m) => (m._id || m).toString() === req.user._id.toString()) ||
       req.user.role === 'super_admin' ||
-      txn.requester.toString() === req.user._id.toString() ||
-      txn.teamLead?.toString() === req.user._id.toString() ||
-      txn.handler?.toString() === req.user._id.toString() ||
+      (txn.requester?._id || txn.requester)?.toString() === req.user._id.toString() ||
+      (txn.teamLead?._id || txn.teamLead)?.toString() === req.user._id.toString() ||
+      (txn.handler?._id || txn.handler)?.toString() === req.user._id.toString() ||
       (req.user.role === 'department_admin' && req.user.departmentAdminType === 'store') ||
       (req.user.role === 'department_admin' && req.user.departmentAdminType === 'management');
 

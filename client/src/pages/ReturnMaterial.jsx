@@ -4,10 +4,12 @@ import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, Camera } from 'lucide-react';
 import api from '../lib/api';
 import GeoCamera from '../components/geo-camera/GeoCamera';
+import useAuthStore from '../store/authStore';
 
 export default function ReturnMaterial() {
   const { barcode } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
   const [reason, setReason] = useState('');
   const [condition, setCondition] = useState('good');
   const [remarks, setRemarks] = useState('');
@@ -41,7 +43,7 @@ export default function ReturnMaterial() {
   }, []);
 
   const filteredHandlers = employees.filter(emp => {
-    if (emp.role === 'super_admin') return false;
+    if (emp.role === 'super_admin' || emp._id === user?._id) return false;
     const term = handlerSearchQuery.toLowerCase();
     return (
       emp.fullName.toLowerCase().includes(term) ||
@@ -59,9 +61,13 @@ export default function ReturnMaterial() {
     }
   });
 
-  const handleCapturePhoto = (dataUrl, metadata) => {
-    setCapturedPhoto(dataUrl);
-    setPhotoMeta(metadata);
+  const handleCapturePhoto = (uploadData) => {
+    if (uploadData && typeof uploadData === 'object' && uploadData.url) {
+      setCapturedPhoto(uploadData.url);
+      setPhotoMeta(uploadData.metadata);
+    } else {
+      setCapturedPhoto(uploadData);
+    }
   };
 
   const handleSubmit = (e) => {
@@ -277,6 +283,12 @@ export default function ReturnMaterial() {
         </div>
 
         {/* Submit */}
+        {returnMutation.isError && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-xs font-semibold text-red-400">
+            {returnMutation.error?.response?.data?.message || 'Failed to submit return request.'}
+          </div>
+        )}
+
         <div className="pt-4 border-t border-slate-100 flex justify-end gap-3">
           <button
             type="button"
