@@ -149,7 +149,7 @@ export default function BarcodeDetail() {
   if (bc?.status === 'Cancelled' || bc?.transaction?.status === 'rejected') {
     const rejectTimeline = bc.transaction?.timeline?.find(t => t.action === 'Request Rejected' || t.action === 'Receipt Rejected' || t.action?.toLowerCase()?.includes('reject'));
     const rejectUser = rejectTimeline?.user || bc.transaction?.requester;
-    const rejectTime = rejectTimeline?.timestamp || bc.transaction?.updatedAt;
+    const rejectTime = rejectTimeline?.timestamp || bc.transaction?.updatedAt || bc.updatedAt || new Date().toISOString();
     const rejectRemarks = rejectTimeline?.remarks || bc.transaction?.rejectionReason;
 
     timelineHistory.push({
@@ -159,7 +159,11 @@ export default function BarcodeDetail() {
       remarks: `Status: Cancelled. Reason: ${rejectRemarks || 'No reason specified'}`
     });
   }
-  timelineHistory.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+  timelineHistory.sort((a, b) => {
+    const timeA = a.timestamp ? new Date(a.timestamp).getTime() : 0;
+    const timeB = b.timestamp ? new Date(b.timestamp).getTime() : 0;
+    return timeA - timeB;
+  });
 
   const handleAcceptSplit = async () => {
     setAccepting(true);
@@ -485,7 +489,8 @@ export default function BarcodeDetail() {
                   if (log.action.toLowerCase().includes('split requested') && hasLaterSplitDecision) {
                     return null;
                   }
-                  const logDate = new Date(log.timestamp);
+                  const logDate = log.timestamp ? new Date(log.timestamp) : new Date();
+                  const isLogDateValid = !isNaN(logDate.getTime());
                   const actionLower = log.action.toLowerCase();
                   const isTransfer = actionLower.includes('transfer');
                   const isReturn = actionLower.includes('return');
@@ -691,10 +696,10 @@ export default function BarcodeDetail() {
                       {/* Date and Time on the left of the line */}
                       <div className="absolute -left-[110px] w-[85px] text-right pr-3.5 flex flex-col gap-0.5 select-none">
                         <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold uppercase tracking-wide">
-                          {logDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                          {isLogDateValid ? logDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                         </span>
                         <span className="text-[9px] text-slate-400 block font-bold">
-                          {logDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                          {isLogDateValid ? logDate.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : ''}
                         </span>
                       </div>
 
