@@ -415,7 +415,7 @@ const StoreDispatchPage = () => {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Layers className="h-5 w-5 text-blue-600" />
               Register & Dispatch Sourcing Request ({transaction.transactionId})
             </h1>
@@ -433,26 +433,26 @@ const StoreDispatchPage = () => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         {/* Step 1: Logistics Document Details */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-850 p-6 rounded-2xl shadow-sm space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+          <h3 className="text-xs font-bold tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <FileText className="h-4 w-4 text-blue-600" />
             1. Logistics Gate Pass & Document Details
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+              <label className="block text-slate-500 dark:text-slate-400 font-bold tracking-wider mb-1.5 text-[10px]">
                 Sender / Receiver Employee
               </label>
               <input
                 type="text"
                 value={transaction?.requester ? `${transaction.requester.fullName} (${transaction.requester.employeeId || 'N/A'})` : 'N/A'}
                 disabled
-                className="w-full text-xs bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold cursor-not-allowed text-slate-800"
+                className="w-full text-xs bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold cursor-not-allowed text-slate-800 dark:text-slate-200"
               />
             </div>
 
             <div>
-              <label className="block text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+              <label className="block text-slate-500 dark:text-slate-400 font-bold tracking-wider mb-1.5 text-[10px]">
                 Document Pass Reference Number *
               </label>
               <input
@@ -461,12 +461,12 @@ const StoreDispatchPage = () => {
                 onChange={(e) => setDocumentNumber(e.target.value)}
                 required
                 placeholder="enter document number"
-                className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition"
+                className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
 
             <div>
-              <label className="block text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+              <label className="block text-slate-500 dark:text-slate-400 font-bold tracking-wider mb-1.5 text-[10px]">
                 Expected Return Date *
               </label>
               <input
@@ -474,12 +474,12 @@ const StoreDispatchPage = () => {
                 value={expectedReturnDate}
                 disabled
                 required
-                className="w-full text-xs bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-800 rounded-lg px-3 py-2 font-bold cursor-not-allowed text-slate-800"
+                className="w-full text-xs bg-slate-100 border border-slate-200 dark:bg-slate-800 dark:border-slate-800 rounded-lg px-3 py-2 font-bold cursor-not-allowed text-slate-800 dark:text-slate-200"
               />
             </div>
 
             <div className="md:col-span-3">
-              <label className="block text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+              <label className="block text-slate-500 dark:text-slate-400 font-bold tracking-wider mb-1.5 text-[10px]">
                 Dispatch Remarks / Purpose
               </label>
               <textarea
@@ -487,28 +487,28 @@ const StoreDispatchPage = () => {
                 onChange={(e) => setRemarks(e.target.value)}
                 placeholder="Enter remarks or purpose for this dispatch..."
                 rows="2"
-                className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200"
+                className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-3.5 py-2.5 font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>
         </div>
 
         {/* Step 2: Logistics Delivery Options */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-855 p-6 rounded-2xl shadow-sm space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4">
+          <h3 className="text-xs font-bold tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <Shield className="h-4 w-4 text-blue-600" />
             2. Logistics Delivery Option
           </h3>
 
           <div className="flex gap-4">
-            <label className="flex-1 flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-955 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition">
+            <label className="flex-1 flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition">
               <input
                 type="radio"
                 name="dispatchMethod"
                 value="handler"
                 checked={dispatchMethod === 'handler'}
                 onChange={() => setDispatchMethod('handler')}
-                className="text-blue-650 focus:ring-blue-500"
+                className="text-blue-600 focus:ring-blue-500"
               />
               <div>
                 <span className="block text-xs font-extrabold text-slate-800 dark:text-slate-200">Sourcing / Assign Handler</span>
@@ -516,14 +516,14 @@ const StoreDispatchPage = () => {
               </div>
             </label>
 
-            <label className="flex-1 flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-955 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition">
+            <label className="flex-1 flex items-center gap-3 p-3.5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100/50 transition">
               <input
                 type="radio"
                 name="dispatchMethod"
                 value="direct"
                 checked={dispatchMethod === 'direct'}
                 onChange={() => setDispatchMethod('direct')}
-                className="text-blue-655 focus:ring-blue-500"
+                className="text-blue-600 focus:ring-blue-500"
               />
               <div>
                 <span className="block text-xs font-extrabold text-slate-800 dark:text-slate-200">Direct Dispatch (Bypass Handler)</span>
@@ -534,14 +534,14 @@ const StoreDispatchPage = () => {
 
           {dispatchMethod === 'handler' && (
             <div className="pt-2 animate-in slide-in-from-top-2 duration-200">
-              <label className="block text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+              <label className="block text-slate-500 dark:text-slate-400 font-bold tracking-wider mb-1.5 text-[10px]">
                 Assign Sourcing Handler *
               </label>
               <div className="relative handler-dropdown-container">
                 <button
                   type="button"
                   onClick={() => setHandlerDropdownOpen(!handlerDropdownOpen)}
-                  className="w-full flex justify-between items-center text-xs bg-slate-50 border border-slate-200 dark:bg-slate-955 dark:border-slate-800 rounded-lg px-3 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-left text-slate-800 dark:text-slate-200"
+                  className="w-full flex justify-between items-center text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded-lg px-3 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 transition text-left text-slate-800 dark:text-slate-200"
                 >
                   <span>
                     {handlerId
@@ -561,7 +561,7 @@ const StoreDispatchPage = () => {
                         value={handlerSearchQuery}
                         onChange={(e) => setHandlerSearchQuery(e.target.value)}
                         placeholder="Search handler..."
-                        className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded px-2.5 py-1.5 font-semibold focus:outline-none focus:border-blue-500"
+                        className="w-full text-xs bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 rounded px-2.5 py-1.5 font-semibold focus:outline-none focus:border-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         onClick={(e) => e.stopPropagation()}
                       />
                     </div>
@@ -577,7 +577,7 @@ const StoreDispatchPage = () => {
                               setHandlerDropdownOpen(false);
                               setHandlerSearchQuery('');
                             }}
-                            className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer block transition ${h._id === handlerId ? 'bg-blue-50/50 dark:bg-blue-955/20 text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-350'}`}
+                            className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer block transition ${h._id === handlerId ? 'bg-blue-50/50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-450' : 'text-slate-700 dark:text-slate-350'}`}
                           >
                             {h.fullName} ({h.employeeId})
                           </button>
@@ -596,9 +596,9 @@ const StoreDispatchPage = () => {
         </div>
 
         {/* Step 3: Material Item Breakdown, Barcodes, Unit Pricing, and Photos */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-855 p-6 rounded-2xl shadow-sm space-y-4">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4">
           <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+            <h3 className="text-xs font-bold tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
               <Layers className="h-4 w-4 text-blue-600" />
               3. Assign Barcodes & Item Pricing
             </h3>
@@ -624,7 +624,7 @@ const StoreDispatchPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
                   {/* Material Name */}
                   <div className="md:col-span-4 space-y-1.5">
-                    <span className="text-[9px] bg-blue-50 dark:bg-blue-955/40 text-blue-650 dark:text-blue-400 px-2 py-0.5 rounded font-black uppercase tracking-wider">
+                    <span className="text-[9px] bg-blue-50 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded font-bold tracking-wider">
                       Material Specification
                     </span>
                     <input
@@ -643,7 +643,7 @@ const StoreDispatchPage = () => {
 
                   {/* Quantity */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Quantity</span>
+                    <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block">Quantity</span>
                     <input
                       type="number"
                       min="1"
@@ -659,7 +659,7 @@ const StoreDispatchPage = () => {
 
                   {/* Unit */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Unit</span>
+                    <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block">Unit</span>
                     <input
                       type="text"
                       value={row.unit}
@@ -675,7 +675,7 @@ const StoreDispatchPage = () => {
 
                   {/* Unit Price */}
                   <div className="md:col-span-2 space-y-1.5">
-                    <label className="block text-slate-400 font-extrabold uppercase tracking-wider text-[9px]">
+                    <label className="block text-slate-400 font-extrabold tracking-wider text-[9px]">
                       Unit Price (₹) *
                     </label>
                     <input
@@ -685,30 +685,30 @@ const StoreDispatchPage = () => {
                       onChange={(e) => handlePriceChange(matIndex, e.target.value)}
                       required
                       placeholder="10"
-                      className="w-full text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      className="w-full text-xs bg-white border border-slate-200 dark:bg-slate-900 dark:border-slate-800 rounded-lg px-3 py-2 font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />
                   </div>
 
                   {/* Row Total */}
                   <div className="md:col-span-2 space-y-1.5 pb-2 text-right">
-                    <span className="block text-slate-400 font-extrabold uppercase tracking-wider text-[9px]">
+                    <span className="block text-slate-400 font-extrabold tracking-wider text-[9px]">
                       Row Total
                     </span>
-                    <span className="block text-xs font-black text-slate-850 dark:text-slate-200 font-mono">
+                    <span className="block text-xs font-bold text-slate-900 dark:text-slate-200 font-mono">
                       ₹{(row.price * row.quantity).toLocaleString()}
                     </span>
                   </div>
                 </div>
 
                 {/* Barcodes Assignment Sub-Panel */}
-                <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-850 space-y-3">
-                  <span className="block text-[9px] text-slate-400 font-extrabold uppercase tracking-wider">
+                <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
+                  <span className="block text-[9px] text-slate-400 font-extrabold tracking-wider">
                     Serial Barcode Assignment
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {row.barcodes.map((bcVal, bcIndex) => (
                       <div key={bcIndex} className="space-y-1">
-                        <label className="block text-slate-400 font-bold uppercase tracking-wider text-[9px]">
+                        <label className="block text-slate-400 font-bold tracking-wider text-[9px]">
                           Barcode #{bcIndex + 1} *
                         </label>
                         <input
@@ -717,7 +717,7 @@ const StoreDispatchPage = () => {
                           onChange={(e) => handleBarcodeChange(matIndex, bcIndex, e.target.value)}
                           required
                           placeholder={`Scan/Type Barcode #${bcIndex + 1}`}
-                          className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          className="w-full text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 font-mono font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                         />
                       </div>
                     ))}
@@ -725,9 +725,9 @@ const StoreDispatchPage = () => {
                 </div>
 
                 {/* Material Photo Verification Card Footer */}
-                <div className="border-t border-slate-100 dark:border-slate-850 pt-3.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-3.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                   <div>
-                    <label className="block text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+                    <label className="block text-slate-500 font-bold tracking-wider text-[10px]">
                       Material Photo Verification *
                     </label>
                     <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Captures image of the actual parts with location verification metadata.</p>
@@ -739,7 +739,7 @@ const StoreDispatchPage = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleCaptureMaterialPhoto(matIndex)}
-                      className="flex items-center gap-1.5 text-blue-650 border-blue-200 dark:text-blue-400 dark:border-blue-800 font-bold text-xs"
+                      className="flex items-center gap-1.5 text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-800 font-bold text-xs"
                     >
                       <Camera className="h-3.5 w-3.5" />
                       Capture Tagged Photo
@@ -748,8 +748,8 @@ const StoreDispatchPage = () => {
                 </div>
 
                 {row.photos && row.photos.length > 0 && (
-                  <div className="border-t border-slate-100 dark:border-slate-850 pt-3">
-                    <span className="block text-[9px] text-slate-400 font-extrabold uppercase mb-2">
+                  <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+                    <span className="block text-[9px] text-slate-400 font-extrabold mb-2">
                       Material Photos Verification ({row.photos.length}) *
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -757,8 +757,8 @@ const StoreDispatchPage = () => {
                         <div key={pIdx} className="flex items-center justify-between gap-2.5 bg-slate-50 dark:bg-slate-950 p-2 rounded-xl border border-slate-200 dark:border-slate-800 relative animate-in zoom-in-95 duration-200 w-full">
                           <div className="flex items-center gap-2.5 min-w-0 flex-1">
                             <img src={photo.url} alt={`Material Capture ${pIdx + 1}`} className="w-10 h-10 object-cover rounded-lg border border-slate-200 dark:border-slate-800 shrink-0" />
-                            <div className="text-[9px] text-slate-455 leading-tight min-w-0">
-                              <span className="block text-slate-600 dark:text-slate-300 font-black flex items-center gap-1">
+                            <div className="text-[9px] text-slate-400 leading-tight min-w-0">
+                              <span className="block text-slate-600 dark:text-slate-300 font-bold flex items-center gap-1">
                                 <MapPin className="h-2.5 w-2.5 text-rose-500 shrink-0" />
                                 {photo.metadata.lat.toFixed(4)}, {photo.metadata.lng.toFixed(4)}
                               </span>
@@ -772,7 +772,7 @@ const StoreDispatchPage = () => {
                               updated[matIndex].photos = updated[matIndex].photos.filter((_, idx) => idx !== pIdx);
                               setMaterialRows(updated);
                             }}
-                            className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-955/20 rounded transition shrink-0"
+                            className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded transition shrink-0"
                             title="Delete photo"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -788,8 +788,8 @@ const StoreDispatchPage = () => {
         </div>
 
         {/* Step 4: Transaction Level Gate Pass / Document Photo (Multiple support) */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-855 p-6 rounded-2xl shadow-sm space-y-4">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 p-6 rounded-2xl shadow-sm space-y-4">
+          <h3 className="text-xs font-bold tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <Camera className="h-4 w-4 text-blue-600" />
             4. Required Dispatch Document / Gate Pass Photo(s)
           </h3>
@@ -803,7 +803,7 @@ const StoreDispatchPage = () => {
                 type="button"
                 variant="outline"
                 onClick={handleCaptureDocPhoto}
-                className="flex items-center gap-2 text-blue-650 border-blue-200 dark:text-blue-400 dark:border-blue-800"
+                className="flex items-center gap-2 text-blue-600 border-blue-200 dark:text-blue-400 dark:border-blue-800"
               >
                 <Camera className="h-4 w-4" />
                 Capture Tagged Document Photo
@@ -813,7 +813,7 @@ const StoreDispatchPage = () => {
             {docPhotos.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 {docPhotos.map((photo, pIdx) => (
-                  <div key={pIdx} className="flex items-center justify-between bg-slate-50 dark:bg-slate-955 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 relative animate-in zoom-in-95 duration-200">
+                  <div key={pIdx} className="flex items-center justify-between bg-slate-50 dark:bg-slate-950 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 relative animate-in zoom-in-95 duration-200">
                     <div className="flex items-center gap-3">
                       <img src={photo.url} alt={`Document Capture ${pIdx + 1}`} className="w-12 h-12 object-cover rounded-lg border border-slate-300" />
                       <div className="text-[10px] text-slate-400 leading-tight">
@@ -843,8 +843,8 @@ const StoreDispatchPage = () => {
         {/* Step 5: Summary and Action Panel */}
         <div className="bg-slate-50 dark:bg-slate-950/60 p-6 rounded-2xl border border-slate-150 dark:border-slate-855 flex flex-col md:flex-row justify-between items-center gap-4">
           <div>
-            <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">WHOLE TRANSACTION GRAND TOTAL</span>
-            <span className="text-xl font-black text-slate-900 dark:text-white">
+            <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">WHOLE TRANSACTION GRAND TOTAL</span>
+            <span className="text-xl font-bold text-slate-900 dark:text-white">
               ₹{getGrandTotal().toLocaleString()}
             </span>
           </div>

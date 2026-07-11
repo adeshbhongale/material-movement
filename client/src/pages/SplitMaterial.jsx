@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Send, Plus, Trash } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, Plus, Send, Trash } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 
 export default function SplitMaterial() {
@@ -111,7 +111,7 @@ export default function SplitMaterial() {
         </button>
         <div>
           <h1 className="text-lg font-extrabold text-slate-800 dark:text-white">Request Material Split</h1>
-          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider font-mono">
+          <p className="text-xs text-slate-500 font-semibold tracking-wider font-mono">
             Primary Barcode: {barcode}
           </p>
         </div>
@@ -120,20 +120,20 @@ export default function SplitMaterial() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Main Barcode Box */}
         <div className="border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4">
-          <span className="text-[10px] text-primary font-black uppercase tracking-wider block">Primary Split Item</span>
+          <span className="text-[10px] text-primary font-bold tracking-wider block">Primary Split Item</span>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs bg-slate-50 dark:bg-slate-950/20 p-4 rounded-2xl border border-slate-100 dark:border-slate-850">
             <div>
-              <span className="text-slate-400 font-bold uppercase block text-[10px]">Material</span>
+              <span className="text-slate-400 font-bold block text-[10px]">Material</span>
               <p className="font-extrabold text-slate-750 dark:text-slate-200 mt-0.5">{bcData?.materialName}</p>
             </div>
             <div>
-              <span className="text-slate-400 font-bold uppercase block text-[10px]">Current Owner</span>
+              <span className="text-slate-400 font-bold block text-[10px]">Current Owner</span>
               <p className="font-extrabold text-slate-750 dark:text-slate-200 mt-0.5">{bcData?.owner?.fullName}</p>
             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Requested New Material Name (Optional)</label>
+            <label className="block text-[10px] font-bold text-slate-500 tracking-wider">Requested New Material Name (Optional)</label>
             <input
               type="text"
               value={requestedMaterialName}
@@ -155,10 +155,10 @@ export default function SplitMaterial() {
                   <Trash className="w-3.5 h-3.5" />
                 </button>
 
-                <span className="text-[10px] text-purple-650 dark:text-purple-400 font-black uppercase tracking-wider block">Additional Split Item #{index + 1}</span>
+                <span className="text-[10px] text-purple-650 dark:text-purple-400 font-bold tracking-wider block">Additional Split Item #{index + 1}</span>
 
                 <div className="space-y-1.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Requested New Material Name *</label>
+                  <label className="block text-[10px] font-bold text-slate-500 tracking-wider">Requested New Material Name *</label>
                   <input
                     type="text"
                     value={name}
@@ -187,7 +187,7 @@ export default function SplitMaterial() {
 
         {/* Primary Remark / Reason for Split */}
         <div className="space-y-2 border-t border-slate-150 dark:border-slate-800 pt-5">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Remark / Reason for Split (Applies to all) *</label>
+          <label className="block text-[10px] font-bold text-slate-500 tracking-wider">Remark / Reason for Split (Applies to all) *</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}

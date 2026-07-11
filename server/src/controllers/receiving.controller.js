@@ -281,8 +281,9 @@ const exportReceiptToExcel = async (req, res) => {
     }
 
     // Check permission
-    if (!['super_admin', 'admin'].includes(req.user.role)) {
-      if (receipt.receiver._id.toString() !== req.user._id.toString()) {
+    if (!['super_admin', 'admin', 'department_admin'].includes(req.user.role)) {
+      const receiverId = receipt.receiver?._id || receipt.receiver;
+      if (receiverId && receiverId.toString() !== req.user._id.toString()) {
         return res.status(403).json({ message: 'You do not have permission to export this receipt.' });
       }
     }
@@ -332,9 +333,10 @@ const exportReceiptToExcel = async (req, res) => {
       // Materials
       worksheet.addRow({ field: '--- Materials ---', value: '' });
       receipt.transaction?.materials.forEach((mat, index) => {
+        const matTotal = (mat.price * mat.quantity) || 0;
         worksheet.addRow({
           field: `Material ${index + 1}`,
-          value: `${mat.name} - ${mat.quantity} ${mat.unit} - ₹${mat.total}`
+          value: `${mat.name} - ${mat.quantity} ${mat.unit} - ₹${matTotal}`
         });
         worksheet.addRow({ field: '  Description', value: mat.description || '-' });
         worksheet.addRow({ field: '  Barcode', value: mat.barcode || '-' });
@@ -392,9 +394,10 @@ const exportReceiptToExcel = async (req, res) => {
       // Materials
       worksheet.addRow({ field: '--- Materials ---', value: '' });
       receipt.materials.forEach((mat, index) => {
+        const matTotal = (mat.price * mat.quantity) || mat.total || 0;
         worksheet.addRow({
           field: `Material ${index + 1}`,
-          value: `${mat.name} - ${mat.quantity} ${mat.unit} - ₹${mat.total}`
+          value: `${mat.name} - ${mat.quantity} ${mat.unit} - ₹${matTotal}`
         });
         worksheet.addRow({ field: '  Description', value: mat.description || '-' });
         worksheet.addRow({ field: '  Barcode', value: mat.barcode || '-' });
@@ -517,7 +520,8 @@ const exportReceiptToPDF = async (req, res) => {
       if (receipt.transaction?.materials.length > 0) {
         receipt.transaction.materials.forEach((mat, index) => {
           doc.text(`Material ${index + 1}:`, { continued: true });
-          doc.text(` ${mat.name} - ${mat.quantity} ${mat.unit} - ₹${mat.total}`);
+          const matTotal = (mat.price * mat.quantity) || 0;
+          doc.text(` ${mat.name} - ${mat.quantity} ${mat.unit} - ₹${matTotal}`);
           if (mat.description) doc.text(`Description: ${mat.description}`);
           if (mat.barcode) doc.text(`Barcode: ${mat.barcode}`);
           doc.moveDown();
@@ -562,7 +566,8 @@ const exportReceiptToPDF = async (req, res) => {
       if (receipt.materials.length > 0) {
         receipt.materials.forEach((mat, index) => {
           doc.text(`Material ${index + 1}:`, { continued: true });
-          doc.text(` ${mat.name} - ${mat.quantity} ${mat.unit} - ₹${mat.total}`);
+          const matTotal = (mat.price * mat.quantity) || mat.total || 0;
+          doc.text(` ${mat.name} - ${mat.quantity} ${mat.unit} - ₹${matTotal}`);
           if (mat.description) doc.text(`Description: ${mat.description}`);
           if (mat.barcode) doc.text(`Barcode: ${mat.barcode}`);
           doc.moveDown();

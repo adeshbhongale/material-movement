@@ -1,25 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  ArrowRightLeft,
-  ChevronDown,
-  Layers,
-  Archive,
-  ArrowUpRight,
   ArrowDownLeft,
-  FileText,
-  TrendingUp,
-  Settings,
-  MessageSquare,
-  History,
-  ShieldCheck,
+  ArrowRightLeft,
+  ArrowUpRight,
   Bell,
-  Inbox
+  ChevronDown,
+  History,
+  Inbox,
+  Layers,
+  LayoutDashboard,
+  Settings,
+  ShieldCheck,
+  TrendingUp
 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { NavLink } from 'react-router-dom';
+import api from '../../lib/axios';
 import useAuthStore from '../../store/authStore';
 import useUIStore from '../../store/uiStore';
-import api from '../../lib/axios';
 
 export default function Sidebar() {
   const { user } = useAuthStore();
@@ -34,7 +31,7 @@ export default function Sidebar() {
       try {
         const isStore = user.role === 'super_admin' || (user.role === 'department_admin' && user.departmentAdminType === 'store');
         const isCloseReqEligible = ['super_admin', 'team_lead', 'department_admin'].includes(user.role);
-        
+
         const [txnRes, transferRes, splitRes, returnRes, closeRes, exchangeRes, notifRes] = await Promise.all([
           api.get('/transactions'),
           api.get('/barcodes/pending/transfers'),
@@ -44,7 +41,7 @@ export default function Sidebar() {
           isStore ? api.get('/barcodes/exchange-requests/pending') : Promise.resolve({ data: { data: [] } }),
           api.get('/notifications?unreadOnly=true')
         ]);
-        
+
         const txns = txnRes.data.data || [];
         const transfers = transferRes.data.transfers || [];
         const splits = splitRes.data.data || [];
@@ -139,15 +136,15 @@ export default function Sidebar() {
   if (!sidebarOpen) return null;
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-400 flex flex-col h-screen sidebar-transition shrink-0 z-30">
+    <aside className="w-64 bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-800 flex flex-col h-screen sidebar-transition shrink-0 z-30">
       {/* Brand Logo header */}
-      <div className="h-16 flex items-center gap-3 px-6 bg-slate-950 border-b border-slate-800">
+      <div className="h-16 flex items-center gap-3 px-6 bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800">
         <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center font-bold text-white text-base">
           M
         </div>
         <div>
-          <h2 className="text-white font-bold text-sm leading-none tracking-wide">MMS</h2>
-          <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest mt-0.5 block">
+          <h2 className="text-slate-900 dark:text-white font-bold text-sm leading-none tracking-wide">MMS</h2>
+          <span className="text-[10px] font-semibold text-slate-500 tracking-widest mt-0.5 block">
             Material Platform
           </span>
         </div>
@@ -160,10 +157,9 @@ export default function Sidebar() {
           to="/"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive
-                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive
+              ? 'bg-primary text-white shadow-md shadow-primary/20'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
@@ -175,19 +171,18 @@ export default function Sidebar() {
           to="/pending"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive
-                ? 'bg-primary text-white shadow-md shadow-primary/20'
-                : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive
+              ? 'bg-primary text-white shadow-md shadow-primary/20'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
           <div className="flex items-center gap-3">
-            <Inbox className="w-4 h-4" /> 
+            <Inbox className="w-4 h-4" />
             <span>Pending Requests</span>
           </div>
           {pendingCount > 0 && (
-            <span className="bg-rose-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shrink-0 animate-pulse">
+            <span className="bg-rose-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 animate-pulse">
               {pendingCount}
             </span>
           )}
@@ -197,14 +192,14 @@ export default function Sidebar() {
         <div>
           <button
             onClick={() => setTxnDropdown(!txnDropdown)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold hover:bg-slate-800 hover:text-white transition"
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white transition"
           >
             <div className="flex items-center gap-3">
               <ArrowRightLeft className="w-4 h-4" /> Transactions
             </div>
             <ChevronDown className={`w-3.5 h-3.5 transition-transform ${txnDropdown ? 'rotate-180' : ''}`} />
           </button>
-          
+
           {txnDropdown && (
             <div className="pl-6 mt-1 space-y-1">
               <NavLink
@@ -213,7 +208,9 @@ export default function Sidebar() {
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-medium transition ${
-                    isActive ? 'text-white bg-slate-800' : 'hover:text-white'
+                    isActive 
+                      ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 font-semibold' 
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   }`
                 }
               >
@@ -224,7 +221,9 @@ export default function Sidebar() {
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
                   `flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-medium transition ${
-                    isActive ? 'text-white bg-slate-800' : 'hover:text-white'
+                    isActive 
+                      ? 'text-slate-900 dark:text-white bg-slate-100 dark:bg-slate-800 font-semibold' 
+                      : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
                   }`
                 }
               >
@@ -239,36 +238,25 @@ export default function Sidebar() {
           to="/materials"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+              ? 'bg-primary text-white shadow-md shadow-primary/20' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
           <Layers className="w-4 h-4" /> Materials Tree
         </NavLink>
 
-        {/* Store inventory */}
-        {(user?.role === 'super_admin' || (user?.role === 'department_admin' && user?.departmentAdminType === 'store')) && (
-          <NavLink
-            to="/store"
-            onClick={closeMobileMenu}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-                isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
-              }`
-            }
-          >
-            <Archive className="w-4 h-4" /> Store Dashboard
-          </NavLink>
-        )}
+
 
         {/* Transfers */}
         <NavLink
           to="/transfers"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+              ? 'bg-primary text-white shadow-md shadow-primary/20' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
@@ -280,8 +268,9 @@ export default function Sidebar() {
           to="/returns"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+              ? 'bg-primary text-white shadow-md shadow-primary/20' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
@@ -289,29 +278,31 @@ export default function Sidebar() {
         </NavLink>
 
         {/* Audit Logs */}
-        {(user?.role === 'super_admin' || 
+        {(user?.role === 'super_admin' ||
           (user?.role === 'department_admin' && (user?.departmentAdminType === 'management' || user?.departmentAdminType === 'store'))
         ) && (
-          <NavLink
-            to="/audit-logs"
-            onClick={closeMobileMenu}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-                isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
-              }`
-            }
-          >
-            <History className="w-4 h-4" /> Audit Logs
-          </NavLink>
-        )}
+            <NavLink
+              to="/audit-logs"
+              onClick={closeMobileMenu}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+                  ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
+                }`
+              }
+            >
+              <History className="w-4 h-4" /> Audit Logs
+            </NavLink>
+          )}
 
         {/* Reports */}
         <NavLink
           to="/reports"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+              ? 'bg-primary text-white shadow-md shadow-primary/20' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
@@ -325,8 +316,9 @@ export default function Sidebar() {
           to="/notifications"
           onClick={closeMobileMenu}
           className={({ isActive }) =>
-            `flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-              isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+            `flex items-center justify-between px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+              ? 'bg-primary text-white shadow-md shadow-primary/20' 
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
             }`
           }
         >
@@ -335,7 +327,7 @@ export default function Sidebar() {
             <span>Notifications</span>
           </div>
           {unreadNotifCount > 0 && (
-            <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-black animate-pulse">
+            <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold animate-pulse">
               {unreadNotifCount}
             </span>
           )}
@@ -348,8 +340,9 @@ export default function Sidebar() {
               to="/users"
               onClick={closeMobileMenu}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-                  isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+                  ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`
               }
             >
@@ -359,8 +352,9 @@ export default function Sidebar() {
               to="/masters"
               onClick={closeMobileMenu}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${
-                  isActive ? 'bg-primary text-white shadow-md shadow-primary/20' : 'hover:bg-slate-800 hover:text-white'
+                `flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold transition ${isActive 
+                  ? 'bg-primary text-white shadow-md shadow-primary/20' 
+                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                 }`
               }
             >
@@ -371,13 +365,13 @@ export default function Sidebar() {
       </nav>
 
       {/* User profile footer display */}
-      <div className="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-3">
+      <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-200 dark:border-slate-800 flex items-center gap-3">
         <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center font-bold text-white text-xs shrink-0 shadow-md shadow-primary/30">
           {user?.fullName?.charAt(0)}
         </div>
         <div className="overflow-hidden">
-          <p className="text-xs font-bold text-white truncate">{user?.fullName}</p>
-          <p className="text-[9px] font-semibold text-slate-500 capitalize truncate mt-0.5">
+          <p className="text-xs font-bold text-slate-800 dark:text-white truncate">{user?.fullName}</p>
+          <p className="text-[9px] font-semibold text-slate-500 dark:text-slate-450 capitalize truncate mt-0.5">
             {user?.role?.replace('_', ' ')}
           </p>
         </div>

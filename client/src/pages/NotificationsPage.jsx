@@ -35,10 +35,10 @@ export default function NotificationsPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6 animate-fade-in">
-      <div className="flex justify-between items-center pb-4 border-b border-slate-100">
+    <div className="max-w-2xl mx-auto bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6 animate-fade-in">
+      <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800">
         <div>
-          <h1 className="text-lg font-extrabold text-slate-800 flex items-center gap-2">
+          <h1 className="text-lg font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
             <Bell className="w-5 h-5 text-primary" /> Notifications
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Inbox of lifecycle updates, transfer notifications, and approvals</p>
@@ -55,16 +55,18 @@ export default function NotificationsPage() {
             <div
               key={n._id}
               onClick={() => handleNotificationClick(n)}
-              className={`p-4 border rounded-2xl flex justify-between items-start gap-4 transition cursor-pointer hover:bg-slate-50/80 ${
-                n.read ? 'bg-slate-50 border-slate-200' : 'bg-white border-primary/20 shadow-sm shadow-primary/5'
+              className={`p-4 border rounded-2xl flex justify-between items-start gap-4 transition cursor-pointer ${
+                n.read 
+                  ? 'bg-slate-50 dark:bg-slate-950/40 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800' 
+                  : 'bg-white dark:bg-slate-900 border-primary/20 dark:border-primary/40 shadow-sm shadow-primary/5 hover:bg-slate-50 dark:hover:bg-slate-800/80'
               }`}
             >
               <div className="space-y-1">
-                <p className={`text-xs ${n.read ? 'font-semibold text-slate-700' : 'font-extrabold text-slate-800'}`}>
+                <p className={`text-xs ${n.read ? 'font-semibold text-slate-700 dark:text-slate-300' : 'font-extrabold text-slate-800 dark:text-slate-100'}`}>
                   {n.title}
                 </p>
-                <p className="text-xs text-slate-500">{n.message}</p>
-                <p className="text-[9px] text-slate-405 font-bold mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400">{n.message}</p>
+                <p className="text-[9px] text-slate-400 dark:text-slate-500 font-bold mt-1">
                   {new Date(n.createdAt).toLocaleString()}
                 </p>
               </div>
@@ -75,7 +77,7 @@ export default function NotificationsPage() {
                     e.stopPropagation();
                     readMutation.mutate(n._id);
                   }}
-                  className="p-1 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-655"
+                  className="p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-655"
                   title="Mark as Read"
                 >
                   <CheckCircle className="w-4 h-4" />

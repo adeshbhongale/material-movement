@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { ArrowLeft, Camera, ShieldCheck } from 'lucide-react';
-import api from '../lib/api';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { ArrowLeft, Camera } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import GeoCamera from '../components/geo-camera/GeoCamera';
+import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 
 export default function TransferMaterial() {
@@ -72,7 +72,7 @@ export default function TransferMaterial() {
         </button>
         <div>
           <h1 className="text-lg font-extrabold text-slate-800">Transfer Material</h1>
-          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+          <p className="text-xs text-slate-500 font-semibold tracking-wider">
             Barcode: {barcode}
           </p>
         </div>
@@ -80,7 +80,7 @@ export default function TransferMaterial() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Recipient Employee</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Recipient Employee</label>
           <select
             value={toUserId}
             onChange={(e) => setToUserId(e.target.value)}
@@ -96,7 +96,7 @@ export default function TransferMaterial() {
 
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Remarks</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Remarks</label>
           <textarea
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
@@ -109,7 +109,7 @@ export default function TransferMaterial() {
 
         {/* Live Photo Attachment */}
         <div className="space-y-2">
-          <label className="block text-[10px] font-bold text-slate-555 uppercase">Live Photo with Metadata Overlay</label>
+          <label className="block text-[10px] font-bold text-slate-555">Live Photo with Metadata Overlay</label>
           {capturedPhoto ? (
             <div className="relative border border-slate-200 rounded-2xl overflow-hidden aspect-video w-64 bg-slate-100">
               <img src={capturedPhoto} alt="Captured preview" className="w-full h-full object-cover" />

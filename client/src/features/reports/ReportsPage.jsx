@@ -511,8 +511,8 @@ const ReportsPage = () => {
         <button
           onClick={() => { setReportType('transaction'); setCurrentPage(1); }}
           className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${reportType === 'transaction'
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
         >
           Transactions Report
@@ -520,8 +520,8 @@ const ReportsPage = () => {
         <button
           onClick={() => { setReportType('handler'); setCurrentPage(1); }}
           className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${reportType === 'handler'
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
         >
           Handlers Report
@@ -529,8 +529,8 @@ const ReportsPage = () => {
         <button
           onClick={() => { setReportType('returns'); setCurrentPage(1); }}
           className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${reportType === 'returns'
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
         >
           Returns Report
@@ -538,8 +538,8 @@ const ReportsPage = () => {
         <button
           onClick={() => { setReportType('conversions'); setCurrentPage(1); }}
           className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${reportType === 'conversions'
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
         >
           DC & Invoice Conversions
@@ -547,8 +547,8 @@ const ReportsPage = () => {
         <button
           onClick={() => { setReportType('exchange'); setCurrentPage(1); }}
           className={`pb-3 text-sm font-bold border-b-2 transition-all cursor-pointer ${reportType === 'exchange'
-              ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+            ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+            : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
             }`}
         >
           Exchange Barcodes Report
@@ -562,7 +562,7 @@ const ReportsPage = () => {
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-indigo-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{kpis.title1}</span>
+              <span className="text-xs font-bold text-slate-400 tracking-widest">{kpis.title1}</span>
               <span className="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">
                 {kpis.value1}
               </span>
@@ -578,7 +578,7 @@ const ReportsPage = () => {
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-emerald-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{kpis.title2}</span>
+              <span className="text-xs font-bold text-slate-400 tracking-widest">{kpis.title2}</span>
               <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400 mt-1">
                 {kpis.value2}
               </span>
@@ -594,7 +594,7 @@ const ReportsPage = () => {
           <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-sky-500/10 to-transparent rounded-bl-full pointer-events-none group-hover:scale-110 transition-transform" />
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{kpis.title3}</span>
+              <span className="text-xs font-bold text-slate-400 tracking-widest">{kpis.title3}</span>
               <span className="text-2xl font-extrabold text-sky-600 dark:text-sky-400 mt-1">
                 {kpis.value3}
               </span>
@@ -741,7 +741,7 @@ const ReportsPage = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="barcode" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label htmlFor="barcode" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 tracking-wider">
               Barcode Search
             </label>
             <input
@@ -755,7 +755,7 @@ const ReportsPage = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="expectedReturnDate" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label htmlFor="expectedReturnDate" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 tracking-wider">
               Expected Return Date
             </label>
             <input
@@ -768,7 +768,7 @@ const ReportsPage = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="startDate" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label htmlFor="startDate" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 tracking-wider">
               Created From
             </label>
             <input
@@ -781,7 +781,7 @@ const ReportsPage = () => {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label htmlFor="endDate" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label htmlFor="endDate" className="text-[10px] font-semibold text-slate-700 dark:text-slate-300 tracking-wider">
               Created To
             </label>
             <input

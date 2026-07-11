@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
 import { ArrowLeft, Camera } from 'lucide-react';
-import api from '../lib/api';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import GeoCamera from '../components/geo-camera/GeoCamera';
+import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 
 export default function ReturnMaterial() {
@@ -102,7 +102,7 @@ export default function ReturnMaterial() {
         </button>
         <div>
           <h1 className="text-lg font-extrabold text-slate-800">Return to Store</h1>
-          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+          <p className="text-xs text-slate-500 font-semibold tracking-wider">
             Barcode: {barcode}
           </p>
         </div>
@@ -110,7 +110,7 @@ export default function ReturnMaterial() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Reason for Return</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Reason for Return</label>
           <select
             value={reason}
             onChange={(e) => setReason(e.target.value)}
@@ -126,7 +126,7 @@ export default function ReturnMaterial() {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Physical Condition</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Physical Condition</label>
           <select
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
@@ -140,7 +140,7 @@ export default function ReturnMaterial() {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Remarks (Optional)</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Remarks (Optional)</label>
           <textarea
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
@@ -152,7 +152,7 @@ export default function ReturnMaterial() {
 
         {/* Logistics Delivery Option */}
         <div className="space-y-3">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <label className="block text-[10px] font-bold text-slate-500 tracking-wider mb-1.5">
             Logistics Delivery Option *
           </label>
           <div className="grid grid-cols-2 gap-3">
@@ -197,7 +197,7 @@ export default function ReturnMaterial() {
 
         {returnMethod === 'handler' && (
           <div className="pt-2 animate-in slide-in-from-top-2 duration-200">
-            <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+            <label className="block text-slate-500 font-bold tracking-wider mb-1.5 text-[10px]">
               Select Sourcing Handler *
             </label>
             <div className="relative handler-dropdown-container">
@@ -207,10 +207,10 @@ export default function ReturnMaterial() {
                 className="w-full flex justify-between items-center text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 font-bold focus:outline-none focus:ring-1 focus:ring-primary transition text-left text-slate-855"
               >
                 <span>
-                  {handlerId 
-                    ? (employees.find(e => e._id === handlerId) 
-                        ? `${employees.find(e => e._id === handlerId).fullName} (${employees.find(e => e._id === handlerId).employeeId})` 
-                        : 'Select Sourcing Handler')
+                  {handlerId
+                    ? (employees.find(e => e._id === handlerId)
+                      ? `${employees.find(e => e._id === handlerId).fullName} (${employees.find(e => e._id === handlerId).employeeId})`
+                      : 'Select Sourcing Handler')
                     : 'Select Sourcing Handler'}
                 </span>
                 <span className="text-slate-400">▼</span>
@@ -240,7 +240,7 @@ export default function ReturnMaterial() {
                             setHandlerDropdownOpen(false);
                             setHandlerSearchQuery('');
                           }}
-                          className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-50 cursor-pointer block transition ${emp._id === handlerId ? 'bg-primary/5 text-primary font-black' : 'text-slate-705'}`}
+                          className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-50 cursor-pointer block transition ${emp._id === handlerId ? 'bg-primary/5 text-primary font-bold' : 'text-slate-705'}`}
                         >
                           {emp.fullName} ({emp.employeeId})
                         </button>
@@ -259,7 +259,7 @@ export default function ReturnMaterial() {
 
         {/* Live Photo Attachment */}
         <div className="space-y-2">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase">Live Photo with Metadata Overlay</label>
+          <label className="block text-[10px] font-bold text-slate-500">Live Photo with Metadata Overlay</label>
           {capturedPhoto ? (
             <div className="relative border border-slate-200 rounded-2xl overflow-hidden aspect-video w-64 bg-slate-100">
               <img src={capturedPhoto} alt="Captured preview" className="w-full h-full object-cover" />

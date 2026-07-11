@@ -132,7 +132,7 @@ const CreateTransactionPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white m-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white m-0">
             Create Material Request
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Sourcing and logistics transfer request with barcode loops</p>
@@ -171,7 +171,7 @@ const CreateTransactionPage = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-semibold">Purpose / Description</label>
+            <label className="block text-xs font-bold text-slate-500 tracking-wider mb-1.5 font-semibold">Purpose / Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -184,7 +184,7 @@ const CreateTransactionPage = () => {
 
           <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-black text-slate-700 dark:text-slate-350 uppercase tracking-wider">Materials Needed</h3>
+              <h3 className="text-xs font-bold text-slate-700 dark:text-slate-350 tracking-wider">Materials Needed</h3>
               <Button size="xs" variant="outline" type="button" onClick={handleAddMaterial} className="flex items-center gap-1">
                 <Plus className="w-3.5 h-3.5" /> Add Row
               </Button>

@@ -12,8 +12,8 @@ import {
   FileSpreadsheet,
   Inbox,
   Lock,
-  RotateCcw,
   RefreshCw,
+  RotateCcw,
   Send,
   Shield,
   Store,
@@ -47,6 +47,28 @@ const TransactionDetailPage = () => {
   const [returnsList, setReturnsList] = useState([]);
   const [exchangeRequests, setExchangeRequests] = useState([]);
   const [error, setError] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (format) => {
+    setExporting(true);
+    try {
+      const response = await api.get(`/transactions/${id}/export${format === 'pdf' ? '/pdf' : ''}`, {
+        responseType: 'blob'
+      });
+      const fileExtension = format === 'excel' ? 'xlsx' : 'pdf';
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Challan_${txn?.transactionId || id}.${fileExtension}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Error exporting transaction:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Tabs
   const [activeTab, setActiveTab] = useState('materials'); // 'materials' | 'timeline' | 'transfers' | 'returns' | 'documents' | 'chat' | 'audit'
@@ -641,7 +663,7 @@ const TransactionDetailPage = () => {
     return (
       <div className="h-[60vh] w-full flex flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <p className="text-xs font-semibold text-slate-500 tracking-wider">
           Retrieving secure movement transaction...
         </p>
       </div>
@@ -1370,11 +1392,11 @@ const TransactionDetailPage = () => {
             <Button variant="ghost" size="sm" onClick={() => navigate('/transactions')} className="p-1 -ml-1">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none m-0">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-none m-0">
               {txn.transactionId}
             </h1>
           </div>
-          <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-wider">
+          <p className="text-[10px] text-slate-400 mt-1 font-bold tracking-wider">
             {txn.documentType} CHALLAN • Created {new Date(txn.createdAt).toLocaleDateString()}
           </p>
         </div>
@@ -1439,7 +1461,7 @@ const TransactionDetailPage = () => {
 
             {isPendingTransferTarget && (
               <div className="flex items-center gap-2.5 bg-indigo-500/10 border border-indigo-500/20 p-2.5 rounded-xl">
-                <span className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                <span className="text-xs font-bold tracking-wider text-indigo-600 dark:text-indigo-400">
                   New Handler Assignment Request (From {txn.pendingHandlerTransfer?.fromHandler?.fullName || 'Previous Handler'})
                 </span>
                 <Button size="sm" variant="success" onClick={handleAcceptTransfer}>
@@ -1601,7 +1623,7 @@ const TransactionDetailPage = () => {
 
               return (
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-955/20 px-2.5 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900 uppercase">
+                  <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-955/20 px-2.5 py-1.5 rounded-xl border border-amber-200 dark:border-amber-900">
                     Return of {activeReturns.length > 1 ? activeReturns.map(r => r.barcode).join(', ') : activeReturn.barcode} ({activeReturn.status.replace('_', ' ')})
                   </span>
 
@@ -1710,7 +1732,7 @@ const TransactionDetailPage = () => {
       {/* Rejection Notice Banner */}
       {txn.status === 'rejected' && (
         <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-3xl p-5 flex flex-col gap-2 shadow-xs">
-          <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-extrabold text-sm uppercase">
+          <div className="flex items-center gap-2 text-red-700 dark:text-red-400 font-extrabold text-sm">
             <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-450 animate-bounce" /> Request Rejected
           </div>
           <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -1722,7 +1744,7 @@ const TransactionDetailPage = () => {
               const rejectUser = rejectTimeline?.user || txn.requester;
               const rejectTime = rejectTimeline?.timestamp || txn.updatedAt;
               return (
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">
+                <p className="text-[10px] font-extrabold text-slate-400 tracking-wider mt-1">
                   Rejected by: {rejectUser?.fullName || 'Requester'} (REQUESTER) on {new Date(rejectTime).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} at {new Date(rejectTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
                 </p>
               );
@@ -1730,7 +1752,7 @@ const TransactionDetailPage = () => {
             const rejectEntry = txn.approvalChain?.find(a => a.action === 'rejected');
             if (rejectEntry) {
               return (
-                <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mt-1">
+                <p className="text-[10px] font-extrabold text-slate-400 tracking-wider mt-1">
                   Rejected by: {rejectEntry.user?.fullName || 'Approver'} ({rejectEntry.role?.replace('_', ' ')?.toUpperCase()}) on {new Date(rejectEntry.timestamp).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })} at {new Date(rejectEntry.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
                 </p>
               );
@@ -1747,13 +1769,13 @@ const TransactionDetailPage = () => {
         <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col gap-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-lg font-black text-slate-900 dark:text-white">{txn.transactionId}</h2>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">{txn.transactionId}</h2>
               <p className="text-xs text-slate-400 font-semibold mt-0.5">
                 Created on {new Date(txn.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}, {new Date(txn.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}
               </p>
             </div>
             {(['mgt_approved', 'store_accepted', 'handler_assigned', 'dispatched', 'received', 'completed', 'active', 'partially_returned', 'closed'].includes(txn.status) && !allMaterialsResolved && !txn.chatLocked) && (
-              <Button variant="outline" size="sm" onClick={handleOpenTxnChat} className="flex items-center gap-1.5 font-extrabold text-xs uppercase text-blue-600 border-blue-200 hover:bg-blue-50">
+              <Button variant="outline" size="sm" onClick={handleOpenTxnChat} className="flex items-center gap-1.5 font-extrabold text-xs text-blue-600 border-blue-200 hover:bg-blue-50">
                 <Send className="w-3.5 h-3.5 animate-pulse" /> Chat
               </Button>
             )}
@@ -1766,7 +1788,7 @@ const TransactionDetailPage = () => {
                 <Clock className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Requester</span>
+                <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Requester</span>
                 <p className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">
                   {txn.requester?.fullName || 'Requester User'}
                 </p>
@@ -1783,7 +1805,7 @@ const TransactionDetailPage = () => {
                   <Shield className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Team Lead</span>
+                  <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Team Lead</span>
                   <p className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">
                     {txn.teamLead?.fullName || 'Approving Authority'}
                   </p>
@@ -1806,7 +1828,7 @@ const TransactionDetailPage = () => {
                 <UserCheck className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Management Approver</span>
+                <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Management Approver</span>
                 <p className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">
                   {txn.managementApprover?.fullName || txn.approvalChain?.find(a => a.role === 'management')?.user?.fullName || 'Not Assigned Yet'}
                 </p>
@@ -1828,7 +1850,7 @@ const TransactionDetailPage = () => {
                 <Store className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Store</span>
+                <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Store</span>
                 <p className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">
                   {txn.store?.fullName || 'Main Store'}
                 </p>
@@ -1844,7 +1866,7 @@ const TransactionDetailPage = () => {
                 <Database className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Current Owner (Overall)</span>
+                <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Current Owner (Overall)</span>
                 <p className="font-bold text-slate-800 dark:text-white text-xs truncate">
                   {overallOwnerText}
                 </p>
@@ -1857,7 +1879,7 @@ const TransactionDetailPage = () => {
                 <Calendar className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Expected Return Date</span>
+                <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Expected Return Date</span>
                 <p className="font-bold text-slate-855 dark:text-slate-200 text-xs truncate">
                   {txn.dueDate ? new Date(txn.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A'}
                 </p>
@@ -1871,7 +1893,7 @@ const TransactionDetailPage = () => {
                   <FileText className="w-5 h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Store Dispatch Remarks / Purpose</span>
+                  <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Store Dispatch Remarks / Purpose</span>
                   <p className="font-semibold text-slate-800 dark:text-slate-200 text-xs italic">
                     "{txn.remarks}"
                   </p>
@@ -1884,13 +1906,13 @@ const TransactionDetailPage = () => {
         {/* Right Column: Progress Summary timeline */}
         <div className="lg:col-span-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col">
           <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
-            <h3 className="font-black text-sm text-slate-800 dark:text-white">Progress Summary</h3>
+            <h3 className="font-bold text-sm text-slate-800 dark:text-white">Progress Summary</h3>
           </div>
 
           <div className="relative flex flex-col gap-6 pl-6 border-l-2 border-slate-200 dark:border-slate-800 ml-3 py-2">
             {visibleStages.map((stage, idx) => (
               <div key={idx} className="relative">
-                <span className={`absolute -left-[37px] top-[1px] w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-black transition-all
+                <span className={`absolute -left-[37px] top-[1px] w-6 h-6 rounded-full border-2 flex items-center justify-center text-[9px] font-bold transition-all
                   ${stage.done
                     ? 'bg-green-600 border-green-600 text-white shadow-sm shadow-green-500/20'
                     : 'bg-white dark:bg-slate-900 border-slate-350 dark:border-slate-800 text-slate-400'
@@ -1899,7 +1921,7 @@ const TransactionDetailPage = () => {
                   {stage.done ? '✓' : stage.originalIndex + 1}
                 </span>
                 <div>
-                  <h4 className={`text-[11px] font-extrabold uppercase tracking-wide ${stage.done ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400'}`}>
+                  <h4 className={`text-[11px] font-extrabold tracking-wide ${stage.done ? 'text-slate-800 dark:text-slate-200' : 'text-slate-400'}`}>
                     {stage.label}
                   </h4>
                   {stage.sub && <p className="text-[9px] text-slate-400 mt-0.5">{stage.sub}</p>}
@@ -1940,8 +1962,8 @@ const TransactionDetailPage = () => {
                   <kpi.icon className="w-4 h-4" />
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-405 font-extrabold uppercase tracking-wider block mb-0.5">{kpi.label}</span>
-                  <p className="text-xl font-black text-slate-900 dark:text-white leading-none">{kpi.val}</p>
+                  <span className="text-[10px] text-slate-400 dark:text-slate-400 font-extrabold tracking-wider block mb-0.5">{kpi.label}</span>
+                  <p className="text-xl font-bold text-slate-900 dark:text-white leading-none">{kpi.val}</p>
                 </div>
               </div>
             ))}
@@ -1961,9 +1983,9 @@ const TransactionDetailPage = () => {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`pb-2.5 text-[10px] font-extrabold uppercase tracking-widest border-b-2 transition-all cursor-pointer whitespace-nowrap
+            className={`pb-2.5 text-[10px] font-extrabold tracking-widest border-b-2 transition-all cursor-pointer whitespace-nowrap
               ${activeTab === tab.id
-                ? 'border-blue-600 text-blue-600 font-black'
+                ? 'border-blue-600 text-blue-600 font-bold'
                 : 'border-transparent text-slate-400 hover:text-slate-600 dark:hover:text-slate-200'
               }
             `}
@@ -1983,7 +2005,7 @@ const TransactionDetailPage = () => {
                 <div key={mIdx} className="border border-slate-100 dark:border-slate-800/80 rounded-xl p-4 bg-slate-50/30 dark:bg-slate-900/10">
                   <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-2 mb-3">
                     <div>
-                      <h4 className="text-sm font-black text-slate-800 dark:text-slate-150">{mat.name}</h4>
+                      <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">{mat.name}</h4>
                       {(() => {
                         let descText = mat.description;
                         if (descText && descText.startsWith('Split child of')) {
@@ -1999,7 +2021,7 @@ const TransactionDetailPage = () => {
                     <div className="flex flex-col items-end text-right">
                       <Badge variant="info" className="text-xs px-2 py-0.5">{mat.quantity} {mat.unit || 'pcs'}</Badge>
                       {mat.price > 0 && (
-                        <div className="text-[10px] text-slate-500 font-bold mt-1">
+                        <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold mt-1">
                           Unit Price: ₹{mat.price.toLocaleString('en-IN')} | Total: ₹{(mat.price * mat.quantity).toLocaleString('en-IN')}
                         </div>
                       )}
@@ -2020,13 +2042,13 @@ const TransactionDetailPage = () => {
                           <div
                             key={bIdx}
                             onClick={() => handleBarcodeClick(bcStr)}
-                            className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 p-2.5 rounded-lg flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors gap-2"
+                            className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 p-2.5 rounded-lg flex items-center justify-between hover:bg-slate-50/50 dark:hover:bg-slate-800/40 cursor-pointer transition-colors gap-2"
                           >
                             <div className="min-w-0 flex flex-col gap-0.5">
-                              <span className="text-xs font-mono font-black text-blue-650 dark:text-blue-450 tracking-wide">
+                              <span className="text-sm font-bold text-slate-650 dark:text-slate-100 tracking-wide">
                                 {bcStr}
                               </span>
-                              <span className="text-[10px] text-slate-500 font-bold truncate">Owner: {ownerName}</span>
+                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold truncate">Owner: {ownerName}</span>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                               <Badge variant={status === 'Returned' ? 'secondary' : status === 'Cancelled' ? 'danger' : status === 'Active' ? 'success' : 'primary'} className="text-[9px] px-2 py-0.5 leading-none shrink-0 font-bold">
@@ -2042,9 +2064,9 @@ const TransactionDetailPage = () => {
                 </div>
               ))}
               {txn.materials && txn.materials.length > 0 && (
-                <div className="mt-4 p-4 bg-blue-50/50 dark:bg-blue-955/10 border border-blue-100 dark:border-blue-900 rounded-xl flex justify-between items-center text-xs font-black">
-                  <span className="text-slate-500 uppercase tracking-wider font-bold">Transaction Valuation / Combined Total:</span>
-                  <span className="text-sm text-blue-650 dark:text-blue-400 font-black">
+                <div className="mt-4 p-4 bg-slate-100 dark:bg-slate-700 border border-blue-100 dark:border-blue-900 rounded-xl flex justify-between items-center text-xs font-bold">
+                  <span className="text-slate-700 dark:text-slate-100 tracking-wider font-bold">Transaction Valuation / Combined Total:</span>
+                  <span className="text-sm text-blue-650 dark:text-blue-400 font-bold">
                     ₹{txn.materials.reduce((sum, mat) => sum + ((mat.price || 0) * mat.quantity), 0).toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -2060,7 +2082,7 @@ const TransactionDetailPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Timeline Stepper Container */}
             <div className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm">
-              <h3 className="text-sm font-black text-slate-855 dark:text-white mb-6">Timeline (Full Transaction)</h3>
+              <h3 className="text-sm font-bold text-slate-855 dark:text-white mb-6">Timeline (Full Transaction)</h3>
               <div className="relative flex flex-col gap-6 pl-8 border-l-2 border-emerald-600 ml-4 py-2">
                 {unifiedTimeline.map((item, idx) => {
                   const isPending = item.status === 'PENDING';
@@ -2073,7 +2095,7 @@ const TransactionDetailPage = () => {
 
                   return (
                     <div key={idx} className={`relative ${isPending ? 'opacity-60' : ''}`}>
-                      <span className={`absolute -left-[45px] top-[2px] w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-black shadow-sm select-none ${badgeColor}`}>
+                      <span className={`absolute -left-[45px] top-[2px] w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs font-bold shadow-sm select-none ${badgeColor}`}>
                         {item.badgeChar}
                       </span>
                       <div>
@@ -2081,7 +2103,7 @@ const TransactionDetailPage = () => {
                           <span className="text-[10px] text-slate-400 font-bold block">
                             {item.timestamp ? formatTimelineTime(item.timestamp) : 'Pending Action'}
                           </span>
-                          <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm
+                          <span className={`text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-sm
                             ${isPending
                               ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                               : isRejected
@@ -2092,7 +2114,7 @@ const TransactionDetailPage = () => {
                             {item.status}
                           </span>
                         </div>
-                        <h4 className={`text-xs font-black font-sans mt-0.5 ${isPending ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-105'}`}>
+                        <h4 className={`text-xs font-bold font-sans mt-0.5 ${isPending ? 'text-slate-400 dark:text-slate-500' : 'text-slate-800 dark:text-slate-200'}`}>
                           {item.action}
                         </h4>
                         <p className="text-[10px] text-slate-500 font-medium italic mt-0.5">
@@ -2202,14 +2224,13 @@ const TransactionDetailPage = () => {
                     <p className="text-[10px] text-slate-400">Generated on {new Date(txn.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <a
-                  href={`/api/transactions/${id}/export/pdf`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+                <button
+                  onClick={() => handleExport('pdf')}
+                  disabled={exporting}
+                  className="text-xs font-bold text-blue-600 hover:underline cursor-pointer disabled:opacity-50"
                 >
                   Download PDF
-                </a>
+                </button>
               </div>
               <div className="p-4 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 rounded-xl flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -2219,12 +2240,13 @@ const TransactionDetailPage = () => {
                     <p className="text-[10px] text-slate-400">Generated on {new Date(txn.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <a
-                  href={`/api/transactions/${id}/export`}
-                  className="text-xs font-bold text-blue-600 hover:underline cursor-pointer"
+                <button
+                  onClick={() => handleExport('excel')}
+                  disabled={exporting}
+                  className="text-xs font-bold text-blue-600 hover:underline cursor-pointer disabled:opacity-50"
                 >
                   Download Excel
-                </a>
+                </button>
               </div>
             </div>
           </Card>
@@ -2236,7 +2258,7 @@ const TransactionDetailPage = () => {
         <Card title="Invoice Match verification Form" className="mt-6">
           <form onSubmit={handleInvoiceMatchSubmit} className="flex flex-col gap-4 text-xs">
             <div>
-              <label className="block text-slate-550 font-bold uppercase tracking-wider mb-1">Invoice Number *</label>
+              <label className="block text-slate-550 font-bold tracking-wider mb-1">Invoice Number *</label>
               <input
                 type="text"
                 value={matchFormData.invoiceNumber}
@@ -2247,7 +2269,7 @@ const TransactionDetailPage = () => {
               />
             </div>
             <div>
-              <label className="block text-slate-550 font-bold uppercase tracking-wider mb-1">Invoice Date *</label>
+              <label className="block text-slate-550 font-bold tracking-wider mb-1">Invoice Date *</label>
               <input
                 type="date"
                 value={matchFormData.invoiceDate}
@@ -2257,7 +2279,7 @@ const TransactionDetailPage = () => {
               />
             </div>
             <div>
-              <label className="block text-slate-550 font-bold uppercase tracking-wider mb-1">Invoice Total Value (₹) *</label>
+              <label className="block text-slate-550 font-bold tracking-wider mb-1">Invoice Total Value (₹) *</label>
               <input
                 type="number"
                 value={matchFormData.invoiceTotal}
@@ -2293,7 +2315,7 @@ const TransactionDetailPage = () => {
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
                     Transaction Chat: {txn.transactionId}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                  <p className="text-[10px] text-slate-400 font-bold tracking-wider">
                     Discussion context for this challan
                   </p>
                 </div>
@@ -2315,7 +2337,7 @@ const TransactionDetailPage = () => {
               ) : txnChatMessages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-405 gap-1.5">
                   <Send className="w-8 h-8 text-slate-300" />
-                  <p className="text-xs font-semibold uppercase tracking-wider">No comments posted yet.</p>
+                  <p className="text-xs font-semibold tracking-wider">No comments posted yet.</p>
                   <p className="text-[10px] text-slate-400">Start the conversation below!</p>
                 </div>
               ) : (
@@ -2364,13 +2386,13 @@ const TransactionDetailPage = () => {
                 />
                 <button
                   type="submit"
-                  className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-extrabold text-xs uppercase transition shrink-0 flex items-center justify-center"
+                  className="p-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-extrabold text-xs transition shrink-0 flex items-center justify-center"
                 >
                   Send
                 </button>
               </form>
             ) : (
-              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs font-black text-slate-400 py-3">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs font-bold text-slate-400 py-3">
                 Chat is locked for this closed transaction.
               </div>
             )}
@@ -2384,13 +2406,13 @@ const TransactionDetailPage = () => {
       {rejectModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               Reject Movement Request
             </h3>
             <p className="text-xs text-slate-500 mt-1">Submit remarks justifying your rejection. This cancels transit.</p>
             <form onSubmit={submitRejection} className="mt-4 flex flex-col gap-4 text-xs">
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Reason *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Reason *</label>
                 <textarea
                   value={rejectionReason}
                   onChange={(e) => setRejectionReason(e.target.value)}
@@ -2415,13 +2437,13 @@ const TransactionDetailPage = () => {
       {rejectReceiptModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               Reject Material Receipt
             </h3>
             <p className="text-xs text-slate-500 mt-1">Submit remarks explaining why you are rejecting the material receipt. This will close the transaction.</p>
             <form onSubmit={handleRejectReceipt} className="mt-4 flex flex-col gap-4 text-xs">
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Reason *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Reason *</label>
                 <textarea
                   value={rejectReceiptReason}
                   onChange={(e) => setRejectReceiptReason(e.target.value)}
@@ -2446,14 +2468,14 @@ const TransactionDetailPage = () => {
       {storeModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
               Store dispatch / Sourcing Manager
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">Assign handler or complete DC sourcing check.</p>
 
             <form onSubmit={handleStoreAction} className="mt-4 flex flex-col gap-4 text-xs">
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Select Handler *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Select Handler *</label>
                 <select
                   value={handlerId}
                   onChange={(e) => setHandlerId(e.target.value)}
@@ -2468,7 +2490,7 @@ const TransactionDetailPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Sourcing notes</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Sourcing notes</label>
                 <textarea
                   value={storeRemarks}
                   onChange={(e) => setStoreRemarks(e.target.value)}
@@ -2493,10 +2515,10 @@ const TransactionDetailPage = () => {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   Verify Materials Receipt
                 </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Physical check & Geo-Tag confirmation</p>
+                <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5">Physical check & Geo-Tag confirmation</p>
               </div>
               <button onClick={() => setReceiveModal(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-655">
                 <X className="w-5 h-5" />
@@ -2506,12 +2528,12 @@ const TransactionDetailPage = () => {
             <form onSubmit={handleReceiveSubmit} className="mt-4 flex flex-col gap-4 text-xs">
               {txn.remarks && (
                 <div className="p-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800/80 rounded-xl space-y-1">
-                  <span className="block text-[9px] text-slate-400 font-black uppercase tracking-wider">Store Dispatch Remarks / Purpose</span>
+                  <span className="block text-[9px] text-slate-400 font-bold tracking-wider">Store Dispatch Remarks / Purpose</span>
                   <p className="text-xs text-slate-700 dark:text-slate-350 font-medium italic">"{txn.remarks}"</p>
                 </div>
               )}
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Material Condition *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Material Condition *</label>
                 <select
                   value={receiveCondition}
                   onChange={(e) => setReceiveCondition(e.target.value)}
@@ -2524,7 +2546,7 @@ const TransactionDetailPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Discrepancy checks</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Discrepancy checks</label>
                 <textarea
                   value={receiveRemarks}
                   onChange={(e) => setReceiveRemarks(e.target.value)}
@@ -2536,7 +2558,7 @@ const TransactionDetailPage = () => {
 
               {/* Camera Photo capture */}
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Geo-Tagged Receipt Photo *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Geo-Tagged Receipt Photo *</label>
                 {receivePhoto ? (
                   <div className="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50 h-36">
                     <img src={receivePhoto} alt="Challan check" className="w-full h-full object-cover" />
@@ -2555,12 +2577,12 @@ const TransactionDetailPage = () => {
                     {capturingPhoto ? (
                       <>
                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
-                        <span className="text-[10px] uppercase font-bold tracking-wider">Retrieving Satellite GPS...</span>
+                        <span className="text-[10px] font-bold tracking-wider">Retrieving Satellite GPS...</span>
                       </>
                     ) : (
                       <>
                         <Camera className="w-6 h-6 text-slate-400" />
-                        <span className="text-[10px] uppercase font-bold tracking-wider">Take Verification Picture</span>
+                        <span className="text-[10px] font-bold tracking-wider">Take Verification Picture</span>
                       </>
                     )}
                   </button>
@@ -2584,10 +2606,10 @@ const TransactionDetailPage = () => {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   Convert DC Type
                 </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Challan type migration event</p>
+                <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5">Challan type migration event</p>
               </div>
               <button onClick={() => setConvertModal(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-650">
                 <X className="w-5 h-5" />
@@ -2596,7 +2618,7 @@ const TransactionDetailPage = () => {
 
             <form onSubmit={handleConvertSubmit} className="mt-4 flex flex-col gap-4 text-xs">
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Target Document Type *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Target Document Type *</label>
                 <select
                   value={convertType}
                   onChange={(e) => setConvertType(e.target.value)}
@@ -2608,7 +2630,7 @@ const TransactionDetailPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">New Document Number *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">New Document Number *</label>
                 <input
                   type="text"
                   value={convertDocNumber}
@@ -2620,7 +2642,7 @@ const TransactionDetailPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Reason *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Reason *</label>
                 <textarea
                   value={convertRemarks}
                   onChange={(e) => setConvertRemarks(e.target.value)}
@@ -2648,10 +2670,10 @@ const TransactionDetailPage = () => {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
               <div>
-                <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                   Convert Barcode to DC
                 </h3>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">DC Conversion Approval Request</p>
+                <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5">DC Conversion Approval Request</p>
               </div>
               <button onClick={() => setBarcodeCloseModal(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-650">
                 <X className="w-5 h-5" />
@@ -2660,12 +2682,12 @@ const TransactionDetailPage = () => {
 
             <form onSubmit={handleBarcodeCloseSubmit} className="mt-4 flex flex-col gap-4 text-xs">
               <div>
-                <span className="block text-slate-500 font-bold uppercase tracking-wider mb-1">Target Barcode</span>
-                <span className="block font-mono font-black text-blue-650 dark:text-blue-450 text-xs mt-0.5">{selectedBarcodeForClose}</span>
+                <span className="block text-slate-500 font-bold tracking-wider mb-1">Target Barcode</span>
+                <span className="block font-mono font-bold text-blue-650 dark:text-blue-450 text-xs mt-0.5">{selectedBarcodeForClose}</span>
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Target Document Type *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Target Document Type *</label>
                 <select
                   value={barcodeCloseDocType}
                   onChange={(e) => setBarcodeCloseDocType(e.target.value)}
@@ -2679,7 +2701,7 @@ const TransactionDetailPage = () => {
 
               {['DC FOC', 'Invoice'].includes(barcodeCloseDocType) && (
                 <div>
-                  <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Choose Management Approver *</label>
+                  <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Choose Management Approver *</label>
                   <select
                     value={barcodeCloseMgtId}
                     onChange={(e) => setBarcodeCloseMgtId(e.target.value)}
@@ -2695,7 +2717,7 @@ const TransactionDetailPage = () => {
               )}
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">New Document Number *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">New Document Number *</label>
                 <input
                   type="text"
                   value={barcodeCloseDocNumber}
@@ -2707,7 +2729,7 @@ const TransactionDetailPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Reason *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Reason *</label>
                 <textarea
                   value={barcodeCloseRemarks}
                   onChange={(e) => setBarcodeCloseRemarks(e.target.value)}

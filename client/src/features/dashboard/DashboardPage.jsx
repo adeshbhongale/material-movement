@@ -1,50 +1,46 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  RefreshCw, Package, ArrowRight, Shield, Store, Wallet, UserCheck, 
-  Users, Clock, AlertTriangle, CheckCircle, FileText, Send, Reply, 
-  MapPin, Plus, Split, Search, AlertCircle
+import {
+  RefreshCw
 } from 'lucide-react';
-import api from '../../lib/axios';
-import useAuthStore from '../../store/authStore';
-import useActiveRole from '../../hooks/useActiveRole';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis
+} from 'recharts';
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
 import Spinner from '../../components/ui/Spinner';
-import StatsCards from './StatsCards';
-import TransactionCharts from './TransactionCharts';
-import TransferFormModal from '../transactions/TransferFormModal';
+import useActiveRole from '../../hooks/useActiveRole';
+import api from '../../lib/axios';
+import useAuthStore from '../../store/authStore';
 import ReturnFormModal from '../transactions/ReturnFormModal';
 import SplitLotModal from '../transactions/SplitLotModal';
-import {
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid
-} from 'recharts';
+import TransferFormModal from '../transactions/TransferFormModal';
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const activeRole = useActiveRole();
   const { user } = useAuthStore();
-  
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [stats, setStats] = useState(null);
   const [charts, setCharts] = useState({ daily: [], docType: [] });
   const [activities, setActivities] = useState([]);
-  
+
   const [barcodes, setBarcodes] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [pendingApprovals, setPendingApprovals] = useState([]);
-  
+
   // Modal states
   const [activeBarcodeAction, setActiveBarcodeAction] = useState(null); // { barcode, type: 'transfer'|'return'|'split' }
   const [employees, setEmployees] = useState([]);
@@ -65,7 +61,7 @@ const DashboardPage = () => {
       let txnsList = txnRes.data.data || [];
       let bcList = bcRes.data.data || [];
 
-      const isCentralRole = user?.role === 'super_admin' || 
+      const isCentralRole = user?.role === 'super_admin' ||
         (user?.role === 'department_admin' && ['store', 'management', 'accounts'].includes(user?.departmentAdminType));
 
       if (!isCentralRole) {
@@ -76,14 +72,14 @@ const DashboardPage = () => {
           const mgtId = (t.managementApprover?._id || t.managementApprover)?.toString();
           const storeId = (t.store?._id || t.store)?.toString();
           const deptId = (t.department?._id || t.department)?.toString();
-          
+
           const curUserId = user?._id?.toString();
           const curUserDeptId = (user?.department?._id || user?.department)?.toString();
-          
+
           if ((user?.role === 'team_lead' || user?.role === 'department_admin') && deptId === curUserDeptId) {
             return true;
           }
-          
+
           return reqId === curUserId || hdlId === curUserId || tlId === curUserId || mgtId === curUserId || storeId === curUserId;
         });
 
@@ -92,7 +88,7 @@ const DashboardPage = () => {
           const ownerId = (b.owner?._id || b.owner)?.toString();
           const inHistory = b.history?.some(h => (h.user?._id || h.user)?.toString() === curUserId);
           const inOwnership = b.ownershipHistory?.some(oh => (oh.user?._id || oh.user)?.toString() === curUserId);
-          
+
           return ownerId === curUserId || inHistory || inOwnership;
         });
       }
@@ -174,7 +170,7 @@ const DashboardPage = () => {
     return (
       <div className="h-[60vh] w-full flex flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <p className="text-xs font-semibold text-slate-500 tracking-wider">
           Retrieving secure executive dashboards...
         </p>
       </div>
@@ -258,7 +254,7 @@ const DashboardPage = () => {
       {/* Header */}
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white m-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white m-0">
             Dashboard
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Real-time logistics analytics and loop management overview</p>
@@ -271,25 +267,25 @@ const DashboardPage = () => {
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Active Items</span>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider block">Active Items</span>
           <span className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1.5">{stats?.activeItems ?? 0}</span>
           <span className="text-[10px] text-slate-400 font-semibold mt-1">In circulation</span>
         </div>
-        
+
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Pending</span>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider block">Pending</span>
           <span className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1.5">{stats?.pending ?? 0}</span>
           <span className="text-[10px] text-slate-400 font-semibold mt-1">Awaiting action</span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Returned</span>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider block">Returned</span>
           <span className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1.5">{stats?.returned ?? 0}</span>
           <span className="text-[10px] text-slate-400 font-semibold mt-1">Returned to store</span>
         </div>
 
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-xs flex flex-col justify-between">
-          <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Closed</span>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider block">Closed</span>
           <span className="text-3xl font-extrabold text-slate-900 dark:text-white mt-1.5">{stats?.closed ?? 0}</span>
           <span className="text-[10px] text-slate-400 font-semibold mt-1">Completed</span>
         </div>
@@ -326,14 +322,14 @@ const DashboardPage = () => {
                 />
               </PieChart>
             </ResponsiveContainer>
-            
+
             {/* Total count in the center */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none mt-[-5px]">
-              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total</span>
-              <span className="text-2xl font-black text-slate-800 dark:text-white leading-none mt-0.5">{totalItemsCount}</span>
+              <span className="text-[9px] font-bold text-slate-400 tracking-widest">Total</span>
+              <span className="text-2xl font-bold text-slate-800 dark:text-white leading-none mt-0.5">{totalItemsCount}</span>
             </div>
           </div>
-          
+
           <div className="flex flex-col gap-2 mt-4 px-3">
             {pieData.map((item, idx) => (
               <div key={idx} className="flex items-center justify-between text-xs font-semibold">
@@ -376,15 +372,15 @@ const DashboardPage = () => {
                   <AreaChart data={charts.daily} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                     <defs>
                       <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
-                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(226, 232, 240, 0.08)" />
-                    <XAxis 
-                      dataKey="date" 
-                      tick={{ fill: '#94a3b8', fontSize: 10 }} 
-                      stroke="transparent" 
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fill: '#94a3b8', fontSize: 10 }}
+                      stroke="transparent"
                       tickFormatter={(str) => {
                         try {
                           const date = new Date(str);
@@ -395,10 +391,10 @@ const DashboardPage = () => {
                       }}
                     />
                     <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} stroke="transparent" />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                        border: '1px solid rgba(255, 255, 255, 0.1)', 
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
                         borderRadius: '8px',
                         fontSize: '11px',
                         color: '#ffffff'
@@ -427,7 +423,7 @@ const DashboardPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse text-xs">
             <thead>
-              <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 tracking-wider">
                 <th className="py-3 px-4">Transaction ID</th>
                 <th className="py-3 px-4">Requester</th>
                 <th className="py-3 px-4">Date</th>
@@ -449,7 +445,7 @@ const DashboardPage = () => {
                 return (
                   <tr key={t._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
                     <td className="py-3.5 px-4">
-                      <span 
+                      <span
                         onClick={() => navigate(`/transactions/${t._id}`)}
                         className="font-extrabold text-blue-650 hover:underline cursor-pointer tracking-wider"
                       >
@@ -472,14 +468,13 @@ const DashboardPage = () => {
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-24 bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden shrink-0">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              t.status === 'rejected' ? 'bg-slate-400' : 'bg-emerald-500'
-                            }`} 
-                            style={{ width: `${progressPct}%` }} 
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${t.status === 'rejected' ? 'bg-slate-400' : 'bg-emerald-500'
+                              }`}
+                            style={{ width: `${progressPct}%` }}
                           />
                         </div>
-                        <span className="text-[10px] font-black text-slate-500 tracking-wider">{progressPct}%</span>
+                        <span className="text-[10px] font-bold text-slate-500 tracking-wider">{progressPct}%</span>
                       </div>
                     </td>
                   </tr>

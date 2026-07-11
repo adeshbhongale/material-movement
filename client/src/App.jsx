@@ -35,7 +35,6 @@ import ReceivingForm from './pages/ReceivingForm';
 import ReturnMaterial from './pages/ReturnMaterial';
 import ReturnMultiple from './pages/ReturnMultiple';
 import SplitMaterial from './pages/SplitMaterial';
-import StoreDashboard from './pages/StoreDashboard';
 import TransferMaterial from './pages/TransferMaterial';
 
 
@@ -105,7 +104,6 @@ export default function App() {
           <Route path="barcodes/:barcode/transfer" element={<TransferMaterial />} />
           <Route path="barcodes/:barcode/return" element={<ReturnMaterial />} />
           <Route path="materials" element={<MaterialsTree />} />
-          <Route path="store" element={<StoreDashboard />} />
           <Route path="transfers" element={<TransferListPage />} />
           <Route path="returns" element={<ReturnListPage />} />
           <Route path="reports" element={<ReportsPage />} />

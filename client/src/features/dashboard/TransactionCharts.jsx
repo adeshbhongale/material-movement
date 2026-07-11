@@ -1,15 +1,14 @@
-import React from 'react';
 import {
-  AreaChart,
   Area,
+  AreaChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  Tooltip,
   XAxis,
   YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts';
 import Card from '../../components/ui/Card';
 import RecentActivities from './RecentActivities';
@@ -29,21 +28,21 @@ const TransactionCharts = ({ dailyData = [], docTypeData = [], activities = [], 
               <AreaChart data={dailyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2}/>
-                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#6366f1" stopOpacity={0.2} />
+                    <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(226, 232, 240, 0.08)" />
                 <XAxis dataKey="date" tick={{ fill: '#94a3b8', fontSize: 10 }} stroke="transparent" />
                 <YAxis tick={{ fill: '#94a3b8', fontSize: 10 }} stroke="transparent" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)', 
-                    border: '1px solid rgba(255, 255, 255, 0.1)', 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
                     borderRadius: '8px',
                     fontSize: '11px',
                     color: '#ffffff'
-                  }} 
+                  }}
                 />
                 <Area type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
               </AreaChart>
@@ -91,7 +90,7 @@ const TransactionCharts = ({ dailyData = [], docTypeData = [], activities = [], 
                 {docTypeData.map((entry, idx) => (
                   <div key={idx} className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }} />
-                    <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400 uppercase">
+                    <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">
                       {entry.name}: {entry.value}
                     </span>
                   </div>

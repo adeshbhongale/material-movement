@@ -1123,7 +1123,7 @@ const PendingTransactionsPage = () => {
       {/* Top Action Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0 pb-1">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-slate-900 dark:text-white m-0">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white m-0">
             Approvals Command Center
           </h1>
           <p className="text-xs text-slate-500 mt-1">Active Role Profile: <span className="font-extrabold text-blue-650 dark:text-blue-400">{activeRole.label}</span></p>
@@ -1162,10 +1162,10 @@ const PendingTransactionsPage = () => {
 
       {/* Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6 shrink-0">
-        <button onClick={() => setStatusTab('pending')} className={`pb-2.5 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${statusTab === 'pending' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-slate-400'}`}>
+        <button onClick={() => setStatusTab('pending')} className={`pb-2.5 text-xs font-bold tracking-wider border-b-2 transition-all cursor-pointer ${statusTab === 'pending' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-slate-400'}`}>
           Pending Requests ({filteredTxns.length + filteredTransfers.length + filteredSplits.length + filteredReturns.length + filteredCloseRequests.length + filteredExchanges.length})
         </button>
-        <button onClick={() => setStatusTab('history')} className={`pb-2.5 text-xs font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${statusTab === 'history' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-slate-400'}`}>
+        <button onClick={() => setStatusTab('history')} className={`pb-2.5 text-xs font-bold tracking-wider border-b-2 transition-all cursor-pointer ${statusTab === 'history' ? 'border-blue-600 text-blue-600 font-extrabold' : 'border-transparent text-slate-400'}`}>
           Request History
         </button>
       </div>
@@ -1189,7 +1189,7 @@ const PendingTransactionsPage = () => {
                 {/* Split Requests List */}
                 {statusTab === 'pending' && filteredSplits.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-1 mb-1 block">Split Requests</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold tracking-widest pl-1 mb-1 block">Split Requests</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {filteredSplits.map(s => {
                         const isActive = selectedItem?._id === s._id && s.barcode && !s.fromUser;
@@ -1208,15 +1208,15 @@ const PendingTransactionsPage = () => {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400 tracking-wider font-extrabold">Split Request</span>
+                                <span className="text-[10px] font-bold text-purple-600 dark:text-purple-400 tracking-wider font-extrabold">Split Request</span>
                                 <span className="text-xs font-extrabold text-slate-655 dark:text-slate-400 font-mono">{s.transactionId}</span>
                               </div>
                               <Badge variant="primary">PENDING</Badge>
                             </div>
                             <div>
-                              <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">{s.materialName}</h4>
-                              <p className="text-[10px] text-slate-550 font-semibold mt-0.5">Parent: <span className="font-extrabold text-blue-600">{s.barcode}</span></p>
-                              <p className="text-[10px] text-slate-550 font-semibold">Requester: <span className="font-extrabold">{s.requester?.fullName}</span></p>
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">{s.materialName}</h4>
+                              <p className="text-[10px] text-slate-550 dark:text-slate-300 font-semibold mt-0.5">Parent: <span className="font-extrabold text-blue-600">{s.barcode}</span></p>
+                              <p className="text-[10px] text-slate-550 dark:text-slate-300 font-semibold">Requester: <span className="font-extrabold">{s.requester?.fullName}</span></p>
                             </div>
                             <div className="mt-2 pt-1.5 border-t border-dashed border-slate-100 dark:border-slate-800 text-[10px] font-bold flex justify-between items-center text-slate-500">
                               <span className="text-rose-600 dark:text-rose-400">
@@ -1231,7 +1231,7 @@ const PendingTransactionsPage = () => {
                 )}                {/* Return Requests List */}
                 {statusTab === 'pending' && filteredReturns.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-1 mb-1 block">Return Requests</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold tracking-widest pl-1 mb-1 block">Return Requests</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {filteredReturns.map(r => {
                         const isActive = selectedItem?._id === r._id;
@@ -1247,7 +1247,7 @@ const PendingTransactionsPage = () => {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-wider font-extrabold">Return Request</span>
+                                <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 tracking-wider font-extrabold">Return Request</span>
                                 <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 font-mono">{r.transactionId}</span>
                               </div>
                               <Badge variant={r.status === 'completed' ? 'success' : 'warning'}>
@@ -1257,13 +1257,13 @@ const PendingTransactionsPage = () => {
                             <div>
                               <p className="text-xs font-extrabold text-slate-800 dark:text-slate-100">
                                 {r.items && r.items.length > 1 ? 'Barcodes: ' : 'Barcode: '}
-                                <span className="font-mono text-blue-650 font-black">
+                                <span className="font-mono text-blue-650 font-bold">
                                   {r.items && r.items.length > 1 ? r.items.map(it => it.barcode).join(', ') : r.barcode}
                                 </span>
                               </p>
-                              <p className="text-[10px] text-slate-555 font-semibold mt-0.5">From: <span className="font-extrabold">{r.fromUser?.fullName}</span></p>
+                              <p className="text-[10px] text-slate-555 dark:text-slate-300 font-semibold mt-0.5">From: <span className="font-extrabold">{r.fromUser?.fullName}</span></p>
                               <p className="text-[10px] text-slate-555 font-semibold">
-                                Condition: <span className="font-extrabold text-amber-700 uppercase">
+                                Condition: <span className="font-extrabold text-amber-700">
                                   {r.items && r.items.length > 1 ? [...new Set(r.items.map(it => it.condition))].join(', ') : r.condition}
                                 </span>
                               </p>
@@ -1285,7 +1285,7 @@ const PendingTransactionsPage = () => {
                 )}                {/* DC/Invoice Conversion Requests List */}
                 {statusTab === 'pending' && filteredCloseRequests.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-1 mb-1 block">Conversion Requests</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold tracking-widest pl-1 mb-1 block">Conversion Requests</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {filteredCloseRequests.map(r => {
                         const isActive = selectedItem?._id === r._id && !!r.documentType;
@@ -1302,7 +1302,7 @@ const PendingTransactionsPage = () => {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black uppercase tracking-wider font-extrabold text-emerald-600 dark:text-emerald-400">
+                                <span className="text-[10px] font-bold tracking-wider font-extrabold text-emerald-600 dark:text-emerald-400">
                                   {isInvoice ? 'Invoice Conversion' : 'DC Conversion'}
                                 </span>
                                 <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 font-mono">{r.barcode}</span>
@@ -1312,9 +1312,9 @@ const PendingTransactionsPage = () => {
                               </Badge>
                             </div>
                             <div>
-                              <h4 className="text-xs font-black text-slate-800 dark:text-slate-100">Convert to {r.documentType}</h4>
-                              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Number: <span className="font-extrabold">{r.documentNumber}</span></p>
-                              <p className="text-[10px] text-slate-500 font-semibold">Requester: <span className="font-extrabold">{r.requester?.fullName}</span></p>
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">Convert to {r.documentType}</h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold mt-0.5">Number: <span className="font-extrabold">{r.documentNumber}</span></p>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold">Requester: <span className="font-extrabold">{r.requester?.fullName}</span></p>
                             </div>
                             <div className="mt-2 pt-1.5 border-t border-dashed border-slate-100 dark:border-slate-800 text-[10px] font-bold flex justify-between items-center text-slate-500">
                               <span className="text-rose-600 dark:text-rose-400 font-extrabold">
@@ -1339,7 +1339,7 @@ const PendingTransactionsPage = () => {
                 {/* Exchange Requests List */}
                 {statusTab === 'pending' && filteredExchanges.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-1 mb-1 block">Exchange Requests</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold tracking-widest pl-1 mb-1 block">Exchange Requests</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {filteredExchanges.map(e => {
                         const isActive = selectedItem?._id === e._id && !!e.oldBarcode;
@@ -1355,15 +1355,15 @@ const PendingTransactionsPage = () => {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider font-extrabold">Exchange Request</span>
+                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 tracking-wider font-extrabold">Exchange Request</span>
                                 <span className="text-xs font-extrabold text-slate-600 dark:text-slate-400 font-mono">{e.oldBarcode} &rarr; {e.newBarcode || 'Store ID'}</span>
                               </div>
                               <Badge variant="warning">AWAITING STORE</Badge>
                             </div>
                             <div>
-                              <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 font-sans">Exchange to {e.newDocumentType}</h4>
-                              <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Material: <span className="font-extrabold">{e.materialName}</span></p>
-                              <p className="text-[10px] text-slate-500 font-semibold">Requester: <span className="font-extrabold">{e.requester?.fullName}</span></p>
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans">Exchange to {e.newDocumentType}</h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold mt-0.5">Material: <span className="font-extrabold">{e.materialName}</span></p>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-semibold">Requester: <span className="font-extrabold">{e.requester?.fullName}</span></p>
                             </div>
                             <div className="mt-2 pt-1.5 border-t border-dashed border-slate-100 dark:border-slate-800 text-[10px] font-bold flex justify-between items-center text-slate-500">
                               <span className="text-rose-600 dark:text-rose-400 font-extrabold">
@@ -1378,7 +1378,7 @@ const PendingTransactionsPage = () => {
                 )}                {/* Transactions List */}
                 {(statusTab === 'pending' || statusTab === 'history') && filteredTxns.length > 0 && (
                   <div className="flex flex-col gap-2">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-1 mb-1 block">
+                    <span className="text-[10px] text-slate-400 font-extrabold tracking-widest pl-1 mb-1 block">
                       {statusTab === 'history' ? 'Request History' : 'Material Requests'}
                     </span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -1398,7 +1398,7 @@ const PendingTransactionsPage = () => {
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex items-center gap-2">
                                 <div className="flex flex-col gap-0.5">
-                                  <span className="text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 tracking-wider font-extrabold">
+                                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400 tracking-wider font-extrabold">
                                     {t.status === 'submitted' ? 'Material Request (Team Lead Approval)' :
                                       t.status === 'tl_approved' ? 'Material Request (Management Approval)' :
                                         ['mgt_approved', 'ready_for_dispatch'].includes(t.status) ? 'Store Sourcing Request' :
@@ -1413,13 +1413,13 @@ const PendingTransactionsPage = () => {
                             </div>
 
                             <div>
-                              <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug">{t.description || 'Material Logistics transaction'}</h4>
-                              <p className="text-[10px] text-slate-500 font-medium mt-0.5">Sender: <span className="font-extrabold">{t.sender?.fullName || t.requester?.fullName}</span></p>
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 line-clamp-1 leading-snug">{t.description || 'Material Logistics transaction'}</h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-medium mt-0.5">Sender: <span className="font-extrabold">{t.sender?.fullName || t.requester?.fullName}</span></p>
                             </div>
 
-                            <div className="flex items-center justify-between text-[9px] text-slate-400 font-extrabold uppercase mt-1">
+                            <div className="flex items-center justify-between text-[9px] text-slate-400 font-extrabold mt-1">
                               <span>{t.documentType} Challan</span>
-                              <span className="text-slate-700 dark:text-slate-300 font-black">
+                              <span className="text-slate-700 dark:text-slate-300 font-bold">
                                 {!['submitted', 'tl_approved', 'mgt_approved', 'ready_for_dispatch'].includes(t.status)
                                   ? `₹${t.grandTotal?.toLocaleString() || '0'}`
                                   : 'Awaiting Dispatch'}
@@ -1444,7 +1444,7 @@ const PendingTransactionsPage = () => {
                 {/* Barcode Transfers List */}
                 {statusTab === 'pending' && filteredTransfers.length > 0 && (
                   <div className="flex flex-col gap-2 mt-4">
-                    <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-widest pl-1 mb-1 block">Barcode Transfers</span>
+                    <span className="text-[10px] text-slate-400 font-extrabold tracking-widest pl-1 mb-1 block">Barcode Transfers</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {filteredTransfers.map(tr => {
                         const isActive = selectedItem?._id === tr._id && !!selectedItem.barcode;
@@ -1460,19 +1460,19 @@ const PendingTransactionsPage = () => {
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div className="flex flex-col gap-0.5">
-                                <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-wider font-extrabold">Transfer Request</span>
+                                <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 tracking-wider font-extrabold">Transfer Request</span>
                                 <span className="text-xs font-extrabold text-indigo-655 dark:text-indigo-400 font-mono">{tr.barcode}</span>
                               </div>
                               <Badge variant="warning">TRANSFER</Badge>
                             </div>
 
                             <div>
-                              <h4 className="text-xs font-black text-slate-800 dark:text-slate-100 leading-snug">Barcode Transfer Sourcing</h4>
-                              <p className="text-[10px] text-slate-500 font-medium mt-0.5">Sender: <span className="font-extrabold">{tr.fromUser?.fullName}</span></p>
-                              <p className="text-[10px] text-slate-500 font-medium mt-0.5">Recipient: <span className="font-extrabold">{tr.toUser?.fullName}</span></p>
+                              <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 leading-snug">Barcode Transfer Sourcing</h4>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-medium mt-0.5">Sender: <span className="font-extrabold">{tr.fromUser?.fullName}</span></p>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-300 font-medium mt-0.5">Recipient: <span className="font-extrabold">{tr.toUser?.fullName}</span></p>
                             </div>
 
-                            <div className="text-[9px] text-slate-400 font-extrabold uppercase mt-1">
+                            <div className="text-[9px] text-slate-400 font-extrabold mt-1">
                               Type: {tr.type?.toUpperCase()}
                             </div>
                             <div className="mt-2 pt-1.5 border-t border-dashed border-slate-100 dark:border-slate-800 text-[10px] font-bold flex justify-between items-center text-slate-500">
@@ -1495,7 +1495,7 @@ const PendingTransactionsPage = () => {
             <div className="p-3 bg-slate-50 dark:bg-slate-950/60 border-b border-slate-105 flex items-center shrink-0">
               <button
                 onClick={() => setSelectedItem(null)}
-                className="flex items-center gap-2 text-xs font-black text-blue-650 hover:text-blue-700 transition animate-fade-in"
+                className="flex items-center gap-2 text-xs font-bold text-blue-650 dark:text-blue-700 transition animate-fade-in"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Pending List
               </button>
@@ -1529,7 +1529,7 @@ const PendingTransactionsPage = () => {
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">ITEM CONDITION</span>
-                      <span className="font-bold text-amber-700 uppercase font-mono">
+                      <span className="font-bold text-amber-700 font-mono">
                         {selectedItem.items && selectedItem.items.length > 1 ? [...new Set(selectedItem.items.map(it => it.condition))].join(', ') : selectedItem.condition}
                       </span>
                     </div>
@@ -1545,12 +1545,12 @@ const PendingTransactionsPage = () => {
 
                   {selectedItem.items && selectedItem.items.length > 1 && (
                     <div className="bg-slate-50 dark:bg-slate-95/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800 flex flex-col gap-2">
-                      <span className="text-[9px] text-slate-400 font-bold uppercase block mb-1">Returned Items ({selectedItem.items.length})</span>
+                      <span className="text-[9px] text-slate-400 font-bold block mb-1">Returned Items ({selectedItem.items.length})</span>
                       <div className="flex flex-col gap-1.5">
                         {selectedItem.items.map((it, idx) => (
                           <div key={idx} className="flex justify-between items-center text-xs font-bold text-slate-750 dark:text-slate-205 border-b border-slate-100 dark:border-slate-800 pb-1.5 last:border-b-0 last:pb-0 font-mono">
                             <span className="text-blue-650">{it.barcode}</span>
-                            <span className="text-[10px] text-amber-700 uppercase bg-amber-50 px-2 py-0.5 rounded-md">{it.condition}</span>
+                            <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">{it.condition}</span>
                           </div>
                         ))}
                       </div>
@@ -1566,13 +1566,13 @@ const PendingTransactionsPage = () => {
                       </div>
                       <div>
                         <span className="text-[9px] text-slate-400 font-bold block mb-0.5">DELIVERY METHOD</span>
-                        <span className="font-bold text-blue-650 uppercase font-mono">Via Courier Handler</span>
+                        <span className="font-bold text-blue-650 font-mono">Via Courier Handler</span>
                       </div>
                     </div>
                   )}
 
                   <div>
-                    <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Reason for Return</h4>
+                    <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Reason for Return</h4>
                     <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-950 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic">
                       "{selectedItem.reason || 'No reason provided.'}"
                     </div>
@@ -1580,7 +1580,7 @@ const PendingTransactionsPage = () => {
 
                   {selectedItem.remarks && (
                     <div>
-                      <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Remarks</h4>
+                      <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Remarks</h4>
                       <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-950 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold">
                         {selectedItem.remarks}
                       </div>
@@ -1589,7 +1589,7 @@ const PendingTransactionsPage = () => {
 
                   {selectedItem.photos && selectedItem.photos.length > 0 && (
                     <div>
-                      <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Captured Photo</h4>
+                      <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Captured Photo</h4>
                       <div className="flex gap-2 flex-wrap mt-1">
                         {selectedItem.photos.map((ph, index) => (
                           <img key={index} src={ph.url} alt="Return Capture" className="w-20 h-20 object-cover rounded-lg border border-slate-200" />
@@ -1608,7 +1608,7 @@ const PendingTransactionsPage = () => {
                     {/* Optional remarks input for handler actions */}
                     {['handler_assigned', 'collected'].includes(selectedItem.status) && (
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Decision Comments / Remarks</label>
+                        <label className="block text-[10px] font-bold text-slate-500 tracking-wider mb-2">Decision Comments / Remarks</label>
                         <textarea
                           value={actionRemarks}
                           onChange={(e) => setActionRemarks(e.target.value)}
@@ -1699,7 +1699,7 @@ const PendingTransactionsPage = () => {
                     <div>
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">REQUESTED BY</span>
                       <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.requester?.fullName}</span>
-                      <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">ID: {selectedItem.requester?.employeeId}</span>
+                      <span className="block text-[9px] text-slate-400 mt-0.5 font-bold">ID: {selectedItem.requester?.employeeId}</span>
                     </div>
                     <div>
                       <span className="text-[9px] text-slate-400 font-bold block mb-0.5">EXPECTED RETURN</span>
@@ -1712,17 +1712,17 @@ const PendingTransactionsPage = () => {
                   </div>
 
                   <div>
-                    <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Reason for Split</h4>
+                    <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Reason for Split</h4>
                     <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-950 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic">
                       "{selectedItem.reason}"
                     </div>
                   </div>
 
                   <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-3">
-                    <h4 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">Register New Material Details</h4>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-white tracking-wider">Register New Material Details</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">New Barcode ID *</label>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1">New Barcode ID *</label>
                         <input
                           type="text"
                           value={approveNewBarcode}
@@ -1732,7 +1732,7 @@ const PendingTransactionsPage = () => {
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 mb-1 uppercase">Material Name *</label>
+                        <label className="block text-[10px] font-bold text-slate-500 mb-1">Material Name *</label>
                         <input
                           type="text"
                           value={approveMaterialName}
@@ -1828,15 +1828,15 @@ const PendingTransactionsPage = () => {
                           {getBadgeLabel()}
                         </Badge>
                       </div>
-                      <h3 className="text-base font-extrabold text-slate-855 mt-1">Barcode: {selectedItem.barcode}</h3>
+                      <h3 className="text-base font-extrabold text-slate-800 dark:text-slate-200 mt-1">Barcode: {selectedItem.barcode}</h3>
                     </div>
                   </div>
 
-                  <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 text-xs font-semibold text-slate-600">
-                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-955/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                  <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-5 text-xs font-semibold text-slate-600 dark:text-slate-400">
+                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
                         <span className="text-[9px] text-slate-400 font-bold block mb-0.5">TARGET DOCUMENT TYPE</span>
-                        <span className="font-bold text-blue-600">{selectedItem.documentType}</span>
+                        <span className="font-bold text-blue-600 dark:text-blue-455">{selectedItem.documentType}</span>
                       </div>
                       <div>
                         <span className="text-[9px] text-slate-400 font-bold block mb-0.5">NEW DOCUMENT NUMBER</span>
@@ -1844,11 +1844,11 @@ const PendingTransactionsPage = () => {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-955/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
                       <div>
                         <span className="text-[9px] text-slate-400 font-bold block mb-0.5">REQUESTER</span>
                         <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.requester?.fullName}</span>
-                        <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">ID: {selectedItem.requester?.employeeId}</span>
+                        <span className="block text-[9px] text-slate-400 mt-0.5 font-bold">ID: {selectedItem.requester?.employeeId}</span>
                       </div>
                       <div>
                         <span className="text-[9px] text-slate-400 font-bold block mb-0.5">EXPECTED RETURN</span>
@@ -1862,8 +1862,8 @@ const PendingTransactionsPage = () => {
 
                     {selectedItem.remarks && (
                       <div>
-                        <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Remarks / Reason</h4>
-                        <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-955 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic">
+                        <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Remarks / Reason</h4>
+                        <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-950 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic">
                           "{selectedItem.remarks}"
                         </div>
                       </div>
@@ -1938,12 +1938,12 @@ const PendingTransactionsPage = () => {
                         <div>
                           <span className="text-[9px] text-slate-400 font-bold block mb-0.5">REQUESTER</span>
                           <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.requester?.fullName}</span>
-                          <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">ID: {selectedItem.requester?.employeeId}</span>
+                          <span className="block text-[9px] text-slate-400 mt-0.5 font-bold">ID: {selectedItem.requester?.employeeId}</span>
                         </div>
                       </div>
 
                       <div>
-                        <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Warranty Form / Failure Reason</h4>
+                        <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Warranty Form / Failure Reason</h4>
                         <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-955 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-350 font-bold italic font-sans">
                           "{selectedItem.warrantyReason}"
                         </div>
@@ -1952,7 +1952,7 @@ const PendingTransactionsPage = () => {
                       {canApprove && (
                         <div className="bg-slate-50 dark:bg-slate-955 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
                           <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Assign New Barcode ID *</label>
+                            <label className="block text-xs font-bold text-slate-500 tracking-wider mb-1">Assign New Barcode ID *</label>
                             <input
                               type="text"
                               value={exchangeNewBarcode}
@@ -2015,17 +2015,17 @@ const PendingTransactionsPage = () => {
                         <div>
                           <span className="text-[9px] text-slate-400 font-bold block mb-0.5">FROM OWNER</span>
                           <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.fromUser?.fullName}</span>
-                          <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">{selectedItem.fromDepartment?.name}</span>
+                          <span className="block text-[9px] text-slate-400 mt-0.5 font-bold">{selectedItem.fromDepartment?.name}</span>
                         </div>
                         <div>
                           <span className="text-[9px] text-slate-400 font-bold block mb-0.5">TO RECIPIENT</span>
                           <span className="font-bold text-slate-800 dark:text-slate-150">{selectedItem.toUser?.fullName}</span>
-                          <span className="block text-[9px] text-slate-400 mt-0.5 font-bold uppercase">{selectedItem.toDepartment?.name}</span>
+                          <span className="block text-[9px] text-slate-400 mt-0.5 font-bold">{selectedItem.toDepartment?.name}</span>
                         </div>
                       </div>
 
                       <div>
-                        <h4 className="text-[10px] text-slate-400 font-extrabold uppercase mb-1.5">Remarks / Reason</h4>
+                        <h4 className="text-[10px] text-slate-400 font-extrabold mb-1.5">Remarks / Reason</h4>
                         <div className="p-3.5 bg-slate-50/50 border border-slate-100 dark:bg-slate-950 dark:border-slate-800 rounded-lg text-slate-700 dark:text-slate-300 font-bold">
                           {selectedItem.remarks || 'No remarks provided.'}
                         </div>
@@ -2034,7 +2034,7 @@ const PendingTransactionsPage = () => {
                       <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
                         {selectedItem.barcode && (
                           <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800 space-y-3">
-                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Transfer Verification Photo *</label>
+                            <label className="block text-xs font-bold text-slate-500 tracking-wider">Transfer Verification Photo *</label>
                             <div className="flex items-center gap-3">
                               <img src={transferPhoto} alt="Verification" className="w-16 h-16 object-cover rounded-lg border border-slate-200" />
                               <div className="flex flex-col gap-1.5">
@@ -2054,7 +2054,7 @@ const PendingTransactionsPage = () => {
                         )}
 
                         <div>
-                          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Remarks on action</label>
+                          <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2">Remarks on action</label>
                           <textarea
                             value={actionRemarks}
                             onChange={(e) => setActionRemarks(e.target.value)}
@@ -2099,18 +2099,18 @@ const PendingTransactionsPage = () => {
                       {/* Basic Stats row */}
                       <div className="grid grid-cols-3 gap-4.5 bg-slate-50 dark:bg-slate-950/40 p-4 rounded-xl border border-slate-100 dark:border-slate-800 text-xs">
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">SENDER</span>
+                          <span className="text-[10px] text-slate-400 font-bold tracking-wider block mb-0.5">SENDER</span>
                           <span className="font-bold text-slate-800 dark:text-slate-200">{selectedItem.sender?.fullName || selectedItem.requester?.fullName}</span>
                           <span className="block text-slate-400 text-[10px]">{selectedItem.sender?.department?.name || selectedItem.department?.name || 'Engineering'}</span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">EXPECTED RETURN</span>
+                          <span className="text-[10px] text-slate-400 font-bold tracking-wider block mb-0.5">EXPECTED RETURN</span>
                           <span className="font-bold text-slate-800 dark:text-slate-200">
                             {selectedItem.expectedReturnDate ? new Date(selectedItem.expectedReturnDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : (selectedItem.dueDate ? new Date(selectedItem.dueDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : 'N/A')}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">GRAND TOTAL</span>
+                          <span className="text-[10px] text-slate-400 font-bold tracking-wider block mb-0.5">GRAND TOTAL</span>
                           <span className="font-extrabold text-blue-650 dark:text-blue-400">
                             {showPricing ? `₹${selectedItem.grandTotal?.toLocaleString() || '0'}` : 'Awaiting Dispatch'}
                           </span>
@@ -2119,7 +2119,7 @@ const PendingTransactionsPage = () => {
 
                       {selectedItem.remarks && (
                         <div className="p-4 bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800 rounded-xl space-y-1.5 text-xs">
-                          <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block mb-0.5">Store Dispatch Remarks / Purpose</span>
+                          <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block mb-0.5">Store Dispatch Remarks / Purpose</span>
                           <p className="font-semibold text-slate-700 dark:text-slate-350 italic">
                             "{selectedItem.remarks}"
                           </p>
@@ -2128,7 +2128,7 @@ const PendingTransactionsPage = () => {
 
                       {/* Materials Table */}
                       <div>
-                        <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3">Item Breakdown & Barcode Maps</h4>
+                        <h4 className="text-xs font-bold tracking-wider text-slate-500 mb-3">Item Breakdown & Barcode Maps</h4>
                         <div className="border border-slate-100 dark:border-slate-800 rounded-xl overflow-hidden">
                           <table className="w-full text-xs text-left">
                             <thead className="bg-slate-50 dark:bg-slate-950/40 text-slate-550 font-bold">
@@ -2225,7 +2225,7 @@ const PendingTransactionsPage = () => {
                           ) : (
                             <>
                               <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Decision Comments / Remarks</label>
+                                <label className="block text-xs font-bold text-slate-500 tracking-wider mb-2">Decision Comments / Remarks</label>
                                 <textarea
                                   value={actionRemarks}
                                   onChange={(e) => setActionRemarks(e.target.value)}
@@ -2268,7 +2268,7 @@ const PendingTransactionsPage = () => {
                         (selectedItem.pendingHandlerTransfer?.toHandler?._id === user?._id || selectedItem.pendingHandlerTransfer?.toHandler === user?._id)
                       ) && (
                           <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
-                            <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Handler Transfer Pending</h4>
+                            <h4 className="text-xs font-bold tracking-wider text-slate-500">Handler Transfer Pending</h4>
                             {actionError && <p className="text-xs text-rose-500 font-bold">{actionError}</p>}
                             <div className="flex gap-3 justify-end items-center">
                               {/* Handler-1 view (waiting/cancel) */}
@@ -2313,7 +2313,7 @@ const PendingTransactionsPage = () => {
                       {/* Handler Actions Panel */}
                       {(!selectedItem.pendingHandlerTransfer || selectedItem.pendingHandlerTransfer.status !== 'pending') && (activeRole.role === 'super_admin' || selectedItem.handler?._id === user?._id || selectedItem.handler === user?._id) && ['store_accepted', 'handler_assigned'].includes(selectedItem.status) && (
                         <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Handler Sourcing Actions</h4>
+                          <h4 className="text-xs font-bold tracking-wider text-slate-500">Handler Sourcing Actions</h4>
                           {actionError && <p className="text-xs text-rose-500 font-bold">{actionError}</p>}
                           <div className="flex gap-3 justify-end">
                             <div className="flex gap-3">
@@ -2369,7 +2369,7 @@ const PendingTransactionsPage = () => {
                       {/* Handler Actions Panel (After Requester Rejection) */}
                       {(!selectedItem.pendingHandlerTransfer || selectedItem.pendingHandlerTransfer.status !== 'pending') && (activeRole.role === 'super_admin' || selectedItem.handler?._id === user?._id || selectedItem.handler === user?._id) && selectedItem.status === 'dispatched' && selectedItem.rejectedDeliveryStatus === 'rejected_by_requester' && (
                         <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Handler Sourcing Actions (Rejected Delivery)</h4>
+                          <h4 className="text-xs font-bold tracking-wider text-slate-500">Handler Sourcing Actions (Rejected Delivery)</h4>
                           {actionError && <p className="text-xs text-rose-500 font-bold">{actionError}</p>}
                           <div className="flex gap-3 justify-end">
                             <div className="flex gap-3">
@@ -2415,7 +2415,7 @@ const PendingTransactionsPage = () => {
                       {/* Store Admin Action Panel (Accept Returned Materials from Handler) */}
                       {selectedItem.status === 'dispatched' && selectedItem.rejectedDeliveryStatus === 'sent_to_store' && (activeRole.role === 'super_admin' || (activeRole.role === 'department_admin' && activeRole.adminType === 'store')) && (
                         <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Store Admin Actions</h4>
+                          <h4 className="text-xs font-bold tracking-wider text-slate-500">Store Admin Actions</h4>
                           {actionError && <p className="text-xs text-rose-500 font-bold">{actionError}</p>}
                           <div className="flex gap-3 justify-end">
                             <div className="flex gap-3">
@@ -2451,7 +2451,7 @@ const PendingTransactionsPage = () => {
                       {/* Requester Actions Panel */}
                       {(activeRole.role === 'super_admin' || selectedItem.requester?._id === user?._id || selectedItem.requester === user?._id) && selectedItem.status === 'dispatched' && !selectedItem.requesterRejected && !selectedItem.rejectedDeliveryStatus && (
                         <div className="mt-auto border-t border-slate-100 dark:border-slate-800 pt-5 flex flex-col gap-4">
-                          <h4 className="text-xs font-black uppercase tracking-wider text-slate-500">Requester Sourcing Actions</h4>
+                          <h4 className="text-xs font-bold tracking-wider text-slate-500">Requester Sourcing Actions</h4>
                           {actionError && <p className="text-xs text-rose-500 font-bold">{actionError}</p>}
                           <div className="flex gap-3 justify-end">
                             <div className="flex gap-3">
@@ -2488,7 +2488,7 @@ const PendingTransactionsPage = () => {
       {storeModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
               {storeActionType === 'assign_return_handler' ? 'Assign Return Handler' : 'Store dispatch / Sourcing Manager'}
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -2497,7 +2497,7 @@ const PendingTransactionsPage = () => {
 
             <form onSubmit={handleStoreActionSubmit} className="mt-4 flex flex-col gap-4 text-xs font-semibold text-slate-650 dark:text-slate-400">
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Select Handler *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Select Handler *</label>
                 <select
                   value={handlerId}
                   onChange={(e) => setHandlerId(e.target.value)}
@@ -2512,7 +2512,7 @@ const PendingTransactionsPage = () => {
               </div>
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Sourcing notes</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Sourcing notes</label>
                 <textarea
                   value={storeRemarks}
                   onChange={(e) => setStoreRemarks(e.target.value)}
@@ -2535,7 +2535,7 @@ const PendingTransactionsPage = () => {
       {rejectModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
-            <h3 className="text-base font-black text-slate-900 dark:text-white">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
               {rejectModalTitle || 'Confirm Rejection'}
             </h3>
             <p className="text-xs text-slate-500 mt-1">

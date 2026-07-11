@@ -230,7 +230,7 @@ const EmployeeListPage = () => {
           <div className="flex-1 flex flex-col gap-1.5">
             <span className="text-sm font-bold text-slate-800 dark:text-slate-200">Bulk CSV Upload (Employees)</span>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[10px] uppercase font-bold text-slate-400">CSV Header format:</span>
+              <span className="text-[10px] font-bold text-slate-400">CSV Header format:</span>
               <code className="text-xs text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded font-mono select-all">
                 employeeId,fullName,email,phone,role,department,designation,workLocation
               </code>

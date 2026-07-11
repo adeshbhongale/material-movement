@@ -1,4 +1,3 @@
-import React from 'react';
 import Spinner from './Spinner';
 
 const DataTable = ({
@@ -22,7 +21,7 @@ const DataTable = ({
               {columns.map((col, idx) => (
                 <th
                   key={idx}
-                  className={`px-6 py-4 text-xs font-semibold uppercase tracking-wider ${col.className || ''}`}
+                  className={`px-6 py-4 text-xs font-semibold tracking-wider ${col.className || ''}`}
                 >
                   {col.header}
                 </th>
@@ -92,7 +91,7 @@ const DataTable = ({
                   key={colIdx}
                   className="flex justify-between items-start gap-4 border-b border-slate-100 dark:border-slate-800/60 pb-2.5 last:border-b-0 last:pb-0"
                 >
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
+                  <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
                     {col.header}
                   </span>
                   <div className="text-xs text-slate-700 dark:text-slate-200 text-right font-medium">

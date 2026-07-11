@@ -151,7 +151,7 @@ const CreateEmployeePage = () => {
           </div>
 
           <Card title="Temporary Access Credentials" className="text-center flex flex-col items-center gap-4 py-8">
-            <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Temporary Password</span>
+            <span className="text-[10px] text-slate-400 font-bold tracking-wider">Temporary Password</span>
             <span className="text-3xl font-extrabold font-mono select-all bg-indigo-50 border border-indigo-100 dark:bg-slate-950 dark:border-slate-800 text-indigo-700 dark:text-indigo-400 px-6 py-3 rounded-lg">
               {tempPassword}
             </span>

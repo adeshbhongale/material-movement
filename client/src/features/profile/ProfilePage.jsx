@@ -1,11 +1,10 @@
-import React, { useState, useRef } from 'react';
-import { User, Phone, Mail, MapPin, Building, Briefcase, Camera, Save, KeyRound, CheckCircle2, Calendar, ShieldAlert } from 'lucide-react';
-import useAuthStore from '../../store/authStore';
-import api from '../../lib/axios';
+import { Briefcase, Building, Calendar, Camera, CheckCircle2, KeyRound, Mail, MapPin, Phone, Save, ShieldAlert, User } from 'lucide-react';
+import { useRef, useState } from 'react';
+import Badge from '../../components/ui/Badge';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import Card from '../../components/ui/Card';
-import Badge from '../../components/ui/Badge';
+import api from '../../lib/axios';
+import useAuthStore from '../../store/authStore';
 
 const ProfilePage = () => {
   const { user, updateUser } = useAuthStore();
@@ -122,17 +121,17 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col gap-8 max-w-5xl mx-auto pb-12 animate-in fade-in duration-300">
-      
+
       {/* Cover Header Hero Banner */}
       <div className="relative rounded-2xl overflow-hidden shadow-lg border border-slate-200/50 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div className="h-32 sm:h-48 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 dark:from-slate-900 dark:via-indigo-950 dark:to-slate-900 relative">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
           <div className="absolute inset-0 bg-gradient-to-t from-white/10 dark:from-slate-900/40" />
         </div>
-        
+
         {/* Floating User Summary */}
         <div className="px-6 pb-6 pt-16 sm:pt-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4 relative">
-          
+
           {/* Avatar Container */}
           <div className="absolute -top-16 sm:-top-20 left-6 sm:left-10 group">
             <div className="w-28 h-28 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-white dark:border-slate-900 bg-slate-100 dark:bg-slate-800 shadow-2xl relative flex items-center justify-center text-slate-400 font-extrabold text-4xl select-none group-hover:scale-105 transition-transform duration-300">
@@ -141,7 +140,7 @@ const ProfilePage = () => {
               ) : (
                 <span className="text-indigo-600 dark:text-indigo-400">{user?.fullName?.charAt(0) || 'U'}</span>
               )}
-              
+
               {/* Photo Overlay Upload trigger */}
               <button
                 disabled={photoUploading}
@@ -152,7 +151,7 @@ const ProfilePage = () => {
                 <span>{photoUploading ? 'Saving...' : 'Upload Photo'}</span>
               </button>
             </div>
-            
+
             <input
               type="file"
               ref={fileInputRef}
@@ -168,7 +167,7 @@ const ProfilePage = () => {
               <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white m-0">
                 {user?.fullName}
               </h1>
-              <Badge variant={['super_admin', 'admin'].includes(user?.role) ? 'default' : 'neutral'} className="h-5 text-[10px] px-2.5 font-bold uppercase tracking-wider">
+              <Badge variant={['super_admin', 'admin'].includes(user?.role) ? 'default' : 'neutral'} className="h-5 text-[10px] px-2.5 font-bold tracking-wider">
                 {user?.role === 'super_admin' ? 'Super Admin' : user?.role === 'admin' ? 'System Admin' : 'Employee'}
               </Badge>
             </div>
@@ -182,11 +181,11 @@ const ProfilePage = () => {
 
       {/* Main Grid Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+
         {/* Left Column: Corporate Assignments */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           <div className="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800 rounded-2xl shadow-sm p-6 flex flex-col gap-5 glass animate-in slide-in-from-left-4 duration-300">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <h3 className="text-sm font-bold tracking-wider text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800 pb-2">
               Corporate Node Properties
             </h3>
 
@@ -196,7 +195,7 @@ const ProfilePage = () => {
                 <Building className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Department</span>
+                <span className="text-[10px] text-slate-400 font-bold tracking-wider block">Department</span>
                 <span className="font-bold text-sm text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {user?.department?.name || 'Unassigned Node'}
                 </span>
@@ -209,7 +208,7 @@ const ProfilePage = () => {
                 <Briefcase className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Designation</span>
+                <span className="text-[10px] text-slate-400 font-bold tracking-wider block">Designation</span>
                 <span className="font-bold text-sm text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
                   {user?.designation?.name || 'Unassigned Role'}
                 </span>
@@ -222,7 +221,7 @@ const ProfilePage = () => {
                 <MapPin className="w-5 h-5" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Work Location</span>
+                <span className="text-[10px] text-slate-400 font-bold tracking-wider block">Work Location</span>
                 <span className="font-bold text-sm text-slate-800 dark:text-slate-200 block truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                   {user?.workLocation?.name || 'Unassigned Facility'}
                 </span>
@@ -240,7 +239,7 @@ const ProfilePage = () => {
                 <Calendar className="w-5 h-5" />
               </div>
               <div>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider block">Date of Joining</span>
+                <span className="text-[10px] text-slate-400 font-bold tracking-wider block">Date of Joining</span>
                 <span className="font-bold text-sm text-slate-800 dark:text-slate-200">
                   {getJoiningDateString()}
                 </span>
@@ -251,14 +250,13 @@ const ProfilePage = () => {
 
         {/* Right Column: Profile forms */}
         <div className="lg:col-span-2 flex flex-col gap-8">
-          
+
           {/* Global Alert Notification */}
           {(profileSuccess || profileError) && (
-            <div className={`p-4 rounded-xl border flex items-start gap-3 animate-in slide-in-from-top-4 duration-300 ${
-              profileSuccess 
-                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400' 
+            <div className={`p-4 rounded-xl border flex items-start gap-3 animate-in slide-in-from-top-4 duration-300 ${profileSuccess
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
                 : 'bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-400'
-            }`}>
+              }`}>
               {profileSuccess ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" /> : <ShieldAlert className="w-5 h-5 shrink-0 mt-0.5" />}
               <div className="text-xs font-semibold leading-relaxed">
                 {profileSuccess || profileError}
@@ -277,7 +275,7 @@ const ProfilePage = () => {
 
             {/* Section 1: Contact details */}
             <div className="flex flex-col gap-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Personal & Contact Channels</h3>
+              <h3 className="text-sm font-bold tracking-wider text-slate-400 dark:text-slate-500">Personal & Contact Channels</h3>
               <form onSubmit={handleProfileUpdate} className="flex flex-col gap-5">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
                   <div className="flex flex-col gap-1.5">
@@ -319,10 +317,10 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="flex justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
-                  <Button 
-                    type="submit" 
-                    size="sm" 
-                    loading={updatingProfile} 
+                  <Button
+                    type="submit"
+                    size="sm"
+                    loading={updatingProfile}
                     icon={Save}
                     className="px-6 shadow-md hover:shadow-lg transition-shadow"
                   >
@@ -336,14 +334,13 @@ const ProfilePage = () => {
 
             {/* Section 2: Password change */}
             <div className="flex flex-col gap-4">
-              <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Credential & Integrity Config</h3>
-              
+              <h3 className="text-sm font-bold tracking-wider text-slate-400 dark:text-slate-500">Credential & Integrity Config</h3>
+
               {(passwordSuccess || passwordError) && (
-                <div className={`p-3 rounded-lg border flex items-center gap-2 ${
-                  passwordSuccess 
-                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400' 
+                <div className={`p-3 rounded-lg border flex items-center gap-2 ${passwordSuccess
+                    ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                     : 'bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-400'
-                }`}>
+                  }`}>
                   {passwordSuccess ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <ShieldAlert className="w-4 h-4 shrink-0" />}
                   <span className="text-xs font-semibold">{passwordSuccess || passwordError}</span>
                 </div>
@@ -381,10 +378,10 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="flex justify-end border-t border-slate-100 dark:border-slate-800 pt-4">
-                  <Button 
-                    type="submit" 
-                    size="sm" 
-                    loading={updatingPassword} 
+                  <Button
+                    type="submit"
+                    size="sm"
+                    loading={updatingPassword}
                     icon={Save}
                     className="px-6 shadow-md hover:shadow-lg transition-shadow"
                   >

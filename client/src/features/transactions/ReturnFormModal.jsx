@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Reply, X, AlertCircle, Camera } from 'lucide-react';
-import api from '../../lib/axios';
+import { AlertCircle, Camera, Reply, X } from 'lucide-react';
+import { useState } from 'react';
 import Button from '../../components/ui/Button';
+import api from '../../lib/axios';
 
 const ReturnFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
   const [qty, setQty] = useState(1);
@@ -60,11 +60,11 @@ const ReturnFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Reply className="w-5 h-5 text-blue-500" />
               Return to Store
             </h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Barcode: {barcode.barcode}</p>
+            <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5">Barcode: {barcode.barcode}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <X className="w-5 h-5" />
@@ -73,7 +73,7 @@ const ReturnFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 text-xs">
           <div>
-            <label className="block text-slate-500 font-extrabold uppercase tracking-wider mb-1">Return Quantity</label>
+            <label className="block text-slate-500 font-extrabold tracking-wider mb-1">Return Quantity</label>
             <input
               type="number"
               min="1"
@@ -85,7 +85,7 @@ const ReturnFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-slate-500 font-extrabold uppercase tracking-wider mb-1">Reason for Return *</label>
+            <label className="block text-slate-500 font-extrabold tracking-wider mb-1">Reason for Return *</label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
@@ -98,7 +98,7 @@ const ReturnFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
 
           {/* Geo-tagged photo capture */}
           <div>
-            <label className="block text-slate-500 font-extrabold uppercase tracking-wider mb-1.5">Capture Physical Material Photo *</label>
+            <label className="block text-slate-500 font-extrabold tracking-wider mb-1.5">Capture Physical Material Photo *</label>
             {photo ? (
               <div className="relative border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50">
                 <img src={photo} alt="Material capture" className="w-full h-36 object-cover" />
@@ -124,12 +124,12 @@ const ReturnFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
                 {capturing ? (
                   <>
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500" />
-                    <span className="font-bold text-[10px] uppercase tracking-wider">Syncing Location...</span>
+                    <span className="font-bold text-[10px] tracking-wider">Syncing Location...</span>
                   </>
                 ) : (
                   <>
                     <Camera className="w-6 h-6 text-slate-400" />
-                    <span className="font-bold text-[10px] uppercase tracking-wider">Capture Geo-Tagged Photo</span>
+                    <span className="font-bold text-[10px] tracking-wider">Capture Geo-Tagged Photo</span>
                   </>
                 )}
               </button>

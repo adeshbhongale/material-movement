@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Send, X, AlertCircle } from 'lucide-react';
-import api from '../../lib/axios';
+import { AlertCircle, Send, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import Button from '../../components/ui/Button';
+import api from '../../lib/axios';
 
 const TransferFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
   const [employees, setEmployees] = useState([]);
@@ -50,11 +50,11 @@ const TransferFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Send className="w-5 h-5 text-blue-500" />
               Transfer Material
             </h3>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Barcode: {barcode.barcode}</p>
+            <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5">Barcode: {barcode.barcode}</p>
           </div>
           <button onClick={onClose} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-600 cursor-pointer">
             <X className="w-5 h-5" />
@@ -63,7 +63,7 @@ const TransferFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
 
         <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-4 text-xs">
           <div>
-            <label className="block text-slate-500 font-extrabold uppercase tracking-wider mb-1">Target Employee *</label>
+            <label className="block text-slate-500 font-extrabold tracking-wider mb-1">Target Employee *</label>
             <select
               value={targetUserId}
               onChange={(e) => setTargetUserId(e.target.value)}
@@ -91,7 +91,7 @@ const TransferFormModal = ({ isOpen, onClose, barcode, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-slate-500 font-extrabold uppercase tracking-wider mb-1">Remarks / Reason *</label>
+            <label className="block text-slate-500 font-extrabold tracking-wider mb-1">Remarks / Reason *</label>
             <textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}

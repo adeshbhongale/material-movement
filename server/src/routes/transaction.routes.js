@@ -22,5 +22,7 @@ router.patch('/:id/reject-receipt', requirePermission('transaction:create', 'tra
 router.put('/:id/assign-management', requirePermission('transaction:create', 'transaction:view_own'), txnController.assignManagementApprover);
 router.put('/:id/cancel', requirePermission('transaction:cancel'), txnController.cancelTransaction);
 router.post('/:transactionId/store-dispatch', txnController.storeDispatchTransaction);
+router.get('/:id/export', requirePermission('transaction:view_own', 'transaction:view_all'), txnController.exportTransactionToExcel);
+router.get('/:id/export/pdf', requirePermission('transaction:view_own', 'transaction:view_all'), txnController.exportTransactionToPDF);
 
 module.exports = router;

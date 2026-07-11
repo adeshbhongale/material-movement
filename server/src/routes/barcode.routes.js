@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const barcodeController = require('../controllers/barcode.controller');
+const barcodeExportController = require('../controllers/barcodeExport.controller');
 const auth = require('../middleware/auth');
 const { requirePermission } = require('../middleware/rbac');
 
@@ -30,5 +31,7 @@ router.get('/exchange-requests/pending', requirePermission('approval:view'), bar
 router.post('/exchange-request', requirePermission('material:view'), barcodeController.createExchangeRequest);
 router.post('/exchange-requests/:requestId/respond', requirePermission('approval:approve'), barcodeController.handleExchangeRequest);
 router.get('/exchange-requests/transaction/:transactionId', requirePermission('barcode:view'), barcodeController.getExchangeRequestsByTransaction);
+router.get('/:barcode/export/excel', requirePermission('barcode:view'), barcodeExportController.exportBarcodeToExcel);
+router.get('/:barcode/export/pdf', requirePermission('barcode:view'), barcodeExportController.exportBarcodeToPDF);
 
 module.exports = router;

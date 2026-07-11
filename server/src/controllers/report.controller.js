@@ -488,6 +488,7 @@ exports.exportTransactionReport = async (req, res) => {
       ];
 
       for (const e of exchanges) {
+        const approvedDateStr = (e.approvedAt && typeof e.approvedAt.toLocaleDateString === 'function') ? e.approvedAt.toLocaleDateString('en-IN') : 'N/A';
         sheet.addRow({
           transactionId: e.transactionId,
           oldBarcode: e.oldBarcode,
@@ -498,7 +499,7 @@ exports.exportTransactionReport = async (req, res) => {
           employeeId: e.requester?.employeeId || 'N/A',
           warrantyReason: e.warrantyReason || '',
           approvedBy: e.approvedBy?.fullName || 'N/A',
-          approvedDate: e.approvedAt ? e.approvedAt.toLocaleDateString() : 'N/A'
+          approvedDate: approvedDateStr
         });
       }
       sheet.getRow(1).font = { bold: true };
@@ -571,6 +572,7 @@ exports.exportTransactionReport = async (req, res) => {
 
       for (const c of conversions) {
         const bc = await Barcode.findOne({ barcode: c.barcode });
+        const closedDateStr = (c.approvedAt && typeof c.approvedAt.toLocaleDateString === 'function') ? c.approvedAt.toLocaleDateString('en-IN') : 'N/A';
         sheet.addRow({
           transactionId: c.transactionId,
           barcode: c.barcode,
@@ -581,7 +583,7 @@ exports.exportTransactionReport = async (req, res) => {
           requesterName: c.requester?.fullName || 'N/A',
           employeeId: c.requester?.employeeId || 'N/A',
           approvedBy: c.approvedBy?.fullName || 'N/A',
-          closedDate: c.approvedAt ? c.approvedAt.toLocaleDateString() : 'N/A'
+          closedDate: closedDateStr
         });
       }
       sheet.getRow(1).font = { bold: true };
@@ -626,6 +628,7 @@ exports.exportTransactionReport = async (req, res) => {
       ];
 
       returns.forEach(r => {
+        const createdAtStr = (r.createdAt && typeof r.createdAt.toLocaleDateString === 'function') ? r.createdAt.toLocaleDateString('en-IN') : 'N/A';
         sheet.addRow({
           transactionId: r.transactionId,
           barcode: r.barcode,
@@ -635,7 +638,7 @@ exports.exportTransactionReport = async (req, res) => {
           status: r.status,
           reason: r.reason,
           remarks: r.remarks,
-          createdAt: r.createdAt.toLocaleDateString()
+          createdAt: createdAtStr
         });
       });
       sheet.getRow(1).font = { bold: true };
@@ -695,6 +698,7 @@ exports.exportTransactionReport = async (req, res) => {
       ];
 
       transactions.forEach(t => {
+        const createdAtStr = (t.createdAt && typeof t.createdAt.toLocaleDateString === 'function') ? t.createdAt.toLocaleDateString('en-IN') : 'N/A';
         sheet.addRow({
           transactionId: t.transactionId,
           handler: t.handler?.fullName || 'N/A',
@@ -702,7 +706,7 @@ exports.exportTransactionReport = async (req, res) => {
           receiver: t.receiver?.fullName || t.otherReceiverName || 'N/A',
           status: t.status,
           grandTotal: t.grandTotal || 0,
-          createdAt: t.createdAt.toLocaleDateString()
+          createdAt: createdAtStr
         });
       });
       sheet.getRow(1).font = { bold: true };
@@ -719,22 +723,35 @@ exports.exportTransactionReport = async (req, res) => {
       sheet.columns = [
         { header: 'Transaction ID', key: 'transactionId', width: 20 },
         { header: 'Requester', key: 'requester', width: 25 },
-        { header: 'Receiver', key: 'receiver', width: 25 },
-        { header: 'Handler', key: 'handler', width: 25 },
-        { header: 'Status', key: 'status', width: 15 },
-        { header: 'Grand Total', key: 'grandTotal', width: 15 },
-        { header: 'Created Date', key: 'createdAt', width: 20 }
+        { header: 'Date', key: 'date', width: 15 },
+        { header: 'Expected Return Date', key: 'expectedReturnDate', width: 22 },
+        { header: 'Status', key: 'status', width: 18 },
+        { header: 'Progress', key: 'progress', width: 15 }
       ];
 
       transactions.forEach(t => {
+        const dateStr = (t.createdAt && typeof t.createdAt.toLocaleDateString === 'function') ? t.createdAt.toLocaleDateString('en-IN') : 'N/A';
+        const expectedReturnDateStr = (t.dueDate && typeof t.dueDate.toLocaleDateString === 'function') ? t.dueDate.toLocaleDateString('en-IN') : 'N/A';
+        
+        let progress = 10;
+        if (t.status === 'tl_approved') progress = 30;
+        else if (t.status === 'mgt_approved' || t.status === 'ready_for_dispatch') progress = 45;
+        else if (t.status === 'store_accepted') progress = 60;
+        else if (t.status === 'handler_assigned') progress = 70;
+        else if (t.status === 'dispatched') progress = 85;
+        else if (t.status === 'received') progress = 95;
+        else if (t.status === 'completed' || t.status === 'closed') progress = 100;
+        else if (t.status === 'rejected') progress = 100;
+        else if (t.status === 'partially_returned') progress = 90;
+        else if (t.status === 'active') progress = 95;
+
         sheet.addRow({
           transactionId: t.transactionId,
           requester: t.requester?.fullName || 'N/A',
-          receiver: t.receiver?.fullName || t.otherReceiverName || 'N/A',
-          handler: t.handler?.fullName || 'N/A',
-          status: t.status,
-          grandTotal: t.grandTotal || 0,
-          createdAt: t.createdAt.toLocaleDateString()
+          date: dateStr,
+          expectedReturnDate: expectedReturnDateStr,
+          status: t.status ? t.status.replace('_', ' ').toUpperCase() : 'N/A',
+          progress: `${progress}%`
         });
       });
       sheet.getRow(1).font = { bold: true };
@@ -785,6 +802,7 @@ exports.exportDcEmployeeReport = async (req, res) => {
 
     for (const reqObj of closeRequests) {
       const bc = await Barcode.findOne({ barcode: reqObj.barcode });
+      const closedDateStr = (reqObj.approvedAt && typeof reqObj.approvedAt.toLocaleDateString === 'function') ? reqObj.approvedAt.toLocaleDateString('en-IN') : 'N/A';
       sheet.addRow({
         transactionId: reqObj.transactionId,
         barcode: reqObj.barcode,
@@ -795,7 +813,7 @@ exports.exportDcEmployeeReport = async (req, res) => {
         requesterName: reqObj.requester?.fullName || 'N/A',
         employeeId: reqObj.requester?.employeeId || 'N/A',
         approvedBy: reqObj.approvedBy?.fullName || 'N/A',
-        closedDate: reqObj.approvedAt ? reqObj.approvedAt.toLocaleDateString() : 'N/A'
+        closedDate: closedDateStr
       });
     }
 

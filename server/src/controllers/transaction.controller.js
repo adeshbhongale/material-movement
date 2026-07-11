@@ -1583,3 +1583,194 @@ exports.updateTransaction = async (req, res) => {
     res.status(500).json({ message: 'Server error updating transaction.' });
   }
 };
+
+exports.exportTransactionToExcel = async (req, res) => {
+  try {
+    const ExcelJS = require('exceljs');
+    const transaction = await Transaction.findOne(getQueryByIdOrTxnId(req.params.id))
+      .populate('requester', 'fullName employeeId')
+      .populate('receiver', 'fullName employeeId')
+      .populate('handler', 'fullName employeeId')
+      .populate('department', 'name code');
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found.' });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'Material Movement System';
+    workbook.created = new Date();
+
+    const worksheet = workbook.addWorksheet(`Challan_${transaction.transactionId}`);
+
+    worksheet.columns = [
+      { header: 'Field', key: 'field', width: 25 },
+      { header: 'Value', key: 'value', width: 55 },
+    ];
+
+    // Header styling
+    worksheet.getRow(1).eachCell((cell) => {
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 12 };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1E40AF' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } };
+    });
+
+    worksheet.addRow({ field: 'Transaction ID', value: transaction.transactionId });
+    worksheet.addRow({ field: 'Status', value: transaction.status.toUpperCase() });
+    worksheet.addRow({ field: 'Document Type', value: transaction.documentType || 'N/A' });
+    worksheet.addRow({ field: 'Document Number', value: transaction.documentNumber || 'N/A' });
+    worksheet.addRow({ field: 'Date Created', value: new Date(transaction.createdAt).toLocaleDateString('en-IN') });
+    worksheet.addRow({ field: 'Expected Return Date', value: transaction.expectedReturnDate ? new Date(transaction.expectedReturnDate).toLocaleDateString('en-IN') : 'N/A' });
+    worksheet.addRow({ field: 'Priority', value: transaction.priority || 'medium' });
+    worksheet.addRow({ field: 'Cost Center', value: transaction.costCenter || 'N/A' });
+    worksheet.addRow({ field: 'DC Type', value: transaction.dcType || 'N/A' });
+    worksheet.addRow({ field: 'Description / Purpose', value: transaction.description || '-' });
+    worksheet.addRow({ field: 'Remarks', value: transaction.remarks || '-' });
+
+    // Sender Details
+    worksheet.addRow({ field: '--- Sender / Requester Details ---', value: '' });
+    worksheet.addRow({ field: 'Name', value: transaction.requester?.fullName || 'N/A' });
+    worksheet.addRow({ field: 'Employee ID', value: transaction.requester?.employeeId || 'N/A' });
+    worksheet.addRow({ field: 'Department', value: transaction.department?.name || 'N/A' });
+
+    // Receiver Details
+    worksheet.addRow({ field: '--- Receiver Details ---', value: '' });
+    worksheet.addRow({ field: 'Name', value: transaction.receiver?.fullName || transaction.otherReceiverName || 'N/A' });
+    worksheet.addRow({ field: 'Employee ID', value: transaction.receiver?.employeeId || 'N/A' });
+
+    // Handler Details
+    if (transaction.handler) {
+      worksheet.addRow({ field: '--- Handler Details ---', value: '' });
+      worksheet.addRow({ field: 'Name', value: transaction.handler?.fullName || 'N/A' });
+      worksheet.addRow({ field: 'Employee ID', value: transaction.handler?.employeeId || 'N/A' });
+    }
+
+    // Materials Breakdown
+    worksheet.addRow({ field: '--- Materials Breakdown ---', value: '' });
+    let grandTotal = 0;
+    transaction.materials.forEach((mat, index) => {
+      const price = mat.price || 0;
+      const quantity = mat.quantity || 0;
+      const total = price * quantity;
+      grandTotal += total;
+
+      worksheet.addRow({
+        field: `Material ${index + 1}`,
+        value: `${mat.name} - ${quantity} ${mat.unit} - Price: ₹${price} - Total: ₹${total}`
+      });
+      if (mat.description) {
+        worksheet.addRow({ field: '  Description', value: mat.description });
+      }
+      if (mat.barcodes && mat.barcodes.length > 0) {
+        const barcodesStr = mat.barcodes.map(b => b.barcode).join(', ');
+        worksheet.addRow({ field: '  Barcodes', value: barcodesStr });
+      }
+    });
+
+    worksheet.addRow({ field: 'Grand Total', value: `₹${grandTotal.toLocaleString('en-IN')}` });
+
+    // Style data rows
+    worksheet.eachRow((row, rowNumber) => {
+      if (rowNumber > 1) {
+        row.eachCell((cell) => {
+          cell.border = { top: { style: 'thin', color: { argb: 'FFD1D5DB' } }, bottom: { style: 'thin', color: { argb: 'FFD1D5DB' } }, left: { style: 'thin', color: { argb: 'FFD1D5DB' } }, right: { style: 'thin', color: { argb: 'FFD1D5DB' } } };
+          cell.alignment = { vertical: 'middle' };
+        });
+      }
+    });
+
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=Challan_${transaction.transactionId}.xlsx`);
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error('Export transaction to excel error:', error);
+    res.status(500).json({ message: 'Failed to export transaction to Excel.', error: error.message });
+  }
+};
+
+exports.exportTransactionToPDF = async (req, res) => {
+  try {
+    const PDFDocument = require('pdfkit');
+    const transaction = await Transaction.findOne(getQueryByIdOrTxnId(req.params.id))
+      .populate('requester', 'fullName employeeId')
+      .populate('receiver', 'fullName employeeId')
+      .populate('handler', 'fullName employeeId')
+      .populate('department', 'name code');
+
+    if (!transaction) {
+      return res.status(404).json({ message: 'Transaction not found.' });
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=Challan_${transaction.transactionId}.pdf`);
+
+    doc.pipe(res);
+
+    // Title
+    doc
+      .fontSize(20)
+      .text('Material Movement Challan', { align: 'center' })
+      .moveDown();
+
+    // General Details
+    doc.fontSize(14).text('General Details', { underline: true });
+    doc.fontSize(11).moveDown(0.5);
+    doc.text(`Transaction ID: ${transaction.transactionId}`);
+    doc.text(`Status: ${transaction.status.toUpperCase()}`);
+    doc.text(`Document Type: ${transaction.documentType || 'N/A'}`);
+    doc.text(`Document Number: ${transaction.documentNumber || 'N/A'}`);
+    doc.text(`Created Date: ${new Date(transaction.createdAt).toLocaleDateString('en-IN')} ${new Date(transaction.createdAt).toLocaleTimeString('en-IN')}`);
+    doc.text(`Expected Return Date: ${transaction.expectedReturnDate ? new Date(transaction.expectedReturnDate).toLocaleDateString('en-IN') : 'N/A'}`);
+    doc.text(`Priority: ${transaction.priority || 'medium'}`);
+    doc.text(`Cost Center: ${transaction.costCenter || 'N/A'}`);
+    doc.text(`DC Type: ${transaction.dcType || 'N/A'}`);
+    doc.text(`Purpose: ${transaction.description || '-'}`);
+    doc.text(`Remarks: ${transaction.remarks || '-'}`);
+    doc.moveDown();
+
+    // Sender & Receiver Details
+    doc.fontSize(14).text('Parties Details', { underline: true });
+    doc.fontSize(11).moveDown(0.5);
+    doc.text(`Sender (Requester): ${transaction.requester?.fullName || 'N/A'} (Emp ID: ${transaction.requester?.employeeId || 'N/A'})`);
+    doc.text(`Sender Department: ${transaction.department?.name || 'N/A'}`);
+    doc.text(`Receiver: ${transaction.receiver?.fullName || transaction.otherReceiverName || 'N/A'} (Emp ID: ${transaction.receiver?.employeeId || 'N/A'})`);
+    if (transaction.handler) {
+      doc.text(`Handler Assigned: ${transaction.handler?.fullName || 'N/A'} (Emp ID: ${transaction.handler?.employeeId || 'N/A'})`);
+    }
+    doc.moveDown();
+
+    // Materials List
+    doc.fontSize(14).text('Materials Breakdown', { underline: true });
+    doc.fontSize(11).moveDown(0.5);
+
+    let grandTotal = 0;
+    if (transaction.materials && transaction.materials.length > 0) {
+      transaction.materials.forEach((mat, index) => {
+        const price = mat.price || 0;
+        const quantity = mat.quantity || 0;
+        const total = price * quantity;
+        grandTotal += total;
+
+        doc.text(`Material ${index + 1}: ${mat.name} - ${quantity} ${mat.unit} - Price: ₹${price} - Total: ₹${total}`, { bold: true });
+        if (mat.description) doc.text(`  Description: ${mat.description}`);
+        if (mat.barcodes && mat.barcodes.length > 0) {
+          const barcodesStr = mat.barcodes.map(b => b.barcode).join(', ');
+          doc.text(`  Barcodes: ${barcodesStr}`);
+        }
+        doc.moveDown(0.5);
+      });
+      doc.moveDown();
+      doc.fontSize(13).text(`Grand Total: ₹${grandTotal.toLocaleString('en-IN')}`, { align: 'right' });
+    } else {
+      doc.text('No materials listed.');
+    }
+
+    doc.end();
+  } catch (error) {
+    console.error('Export transaction to pdf error:', error);
+    res.status(500).json({ message: 'Failed to export transaction to PDF.', error: error.message });
+  }
+};

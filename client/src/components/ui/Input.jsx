@@ -19,7 +19,7 @@ const Input = React.forwardRef(({
       {label && (
         <label
           htmlFor={id}
-          className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+          className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wider"
         >
           {label} {required && <span className="text-red-500">*</span>}
         </label>

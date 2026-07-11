@@ -17,7 +17,7 @@ export default function Layout() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* Desktop Left Sidebar */}
       <div className="hidden md:flex">
         <Sidebar />
@@ -42,7 +42,7 @@ export default function Layout() {
         <Header />
 
         {/* Page Workspace Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-5 bg-slate-50/50">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-950/20 transition-colors duration-300">
           <div className="w-full">
             <Outlet />
           </div>

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save } from 'lucide-react';
-import api from '../../lib/axios';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Button from '../../components/ui/Button';
+import Card from '../../components/ui/Card';
 import Input from '../../components/ui/Input';
 import Select from '../../components/ui/Select';
-import Card from '../../components/ui/Card';
 import Spinner from '../../components/ui/Spinner';
+import api from '../../lib/axios';
 
 const EditEmployeePage = () => {
   const { id } = useParams();
@@ -15,7 +15,7 @@ const EditEmployeePage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  
+
   // Masters lists
   const [depts, setDepts] = useState([]);
   const [desigs, setDesigs] = useState([]);
@@ -127,7 +127,7 @@ const EditEmployeePage = () => {
     return (
       <div className="h-[60vh] w-full flex flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <p className="text-xs font-semibold text-slate-500 tracking-wider">
           Retrieving employee registry...
         </p>
       </div>

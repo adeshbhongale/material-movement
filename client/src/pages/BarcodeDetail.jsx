@@ -37,6 +37,30 @@ export default function BarcodeDetail() {
   const [exchangeNewBarcode, setExchangeNewBarcode] = useState('');
   const [exchangeWarrantyReason, setExchangeWarrantyReason] = useState('');
   const [exchangeSubmitting, setExchangeSubmitting] = useState(false);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (format) => {
+    setExportDropdownOpen(false);
+    setExporting(true);
+    try {
+      const response = await api.get(`/barcodes/${barcode}/export/${format}`, {
+        responseType: 'blob'
+      });
+      const fileExtension = format === 'excel' ? 'xlsx' : 'pdf';
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Barcode_${barcode}.${fileExtension}`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error('Error exporting barcode:', err);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['barcodeDetail', barcode],
@@ -116,13 +140,13 @@ export default function BarcodeDetail() {
   const isReplacementBarcode = exchanges.some(ex => ex.newBarcode === barcode && ex.status === 'approved');
   const showOnlyReturnButton = bc && bc.status?.toUpperCase() === 'ACTIVE' && isReplacementBarcode;
   const showAllButtons = bc && (
-    bc.status?.toUpperCase() === 'EXCHANGED' || 
+    bc.status?.toUpperCase() === 'EXCHANGED' ||
     (bc.status?.toUpperCase() === 'ACTIVE' && !isReplacementBarcode)
   );
 
   const filteredHistory = bc?.history?.filter(log => {
     const actionLower = (log.action || '').toLowerCase();
-    
+
     // Exclude database-level generic exchange entries, as we will render them dynamically
     if (['exchanged', 'barcode exchanged', 'exchange requested'].includes(actionLower)) {
       return false;
@@ -335,7 +359,7 @@ export default function BarcodeDetail() {
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="p-1 -ml-1">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white leading-none m-0 font-mono">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white leading-none m-0 font-mono">
               Barcode: {barcode}
             </h1>
           </div>
@@ -347,13 +371,13 @@ export default function BarcodeDetail() {
             (userData?.role === 'super_admin' || (userData?.role === 'department_admin' && userData?.departmentAdminType === 'store')) ||
             (bc.owner?._id || bc.owner)?.toString() === userData?._id?.toString()
           ) && (
-            !returns ||
-            !returns.some(r => ['pending', 'handler_assigned', 'collected', 'store_received'].includes(r.status))
-          ) && (
-            <Button size="sm" variant="outline" onClick={() => navigate(`/barcodes/${barcode}/return`)}>
-              Return Request
-            </Button>
-          )}
+              !returns ||
+              !returns.some(r => ['pending', 'handler_assigned', 'collected', 'store_received'].includes(r.status))
+            ) && (
+              <Button size="sm" variant="outline" onClick={() => navigate(`/barcodes/${barcode}/return`)}>
+                Return Request
+              </Button>
+            )}
           {bc && showAllButtons && (
             (userData?.role === 'super_admin' || (userData?.role === 'department_admin' && userData?.departmentAdminType === 'store')) ||
             (bc.owner?._id || bc.owner)?.toString() === userData?._id?.toString()
@@ -408,9 +432,34 @@ export default function BarcodeDetail() {
               </>
             )}
           {bc && (
-            <Button variant="outline" size="sm" className="font-extrabold text-xs uppercase">
-              Export <ChevronDown className="w-3.5 h-3.5 ml-1 inline-block" />
-            </Button>
+            <div className="relative">
+              <Button
+                variant="outline"
+                size="sm"
+                className="font-extrabold text-xs"
+                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+              >
+                Export <ChevronDown className="w-3.5 h-3.5 ml-1 inline-block" />
+              </Button>
+              {exportDropdownOpen && (
+                <div className="absolute right-0 mt-1.5 w-40 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-lg z-50 py-1.5 text-xs text-left">
+                  <button
+                    onClick={() => handleExport('excel')}
+                    disabled={exporting}
+                    className="w-full text-left block px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50"
+                  >
+                    Export to Excel
+                  </button>
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    disabled={exporting}
+                    className="w-full text-left block px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-bold disabled:opacity-50"
+                  >
+                    Export to PDF
+                  </button>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -418,7 +467,7 @@ export default function BarcodeDetail() {
       {isLoading ? (
         <div className="flex flex-col items-center justify-center min-h-[300px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8">
           <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-650 mb-3" />
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+          <p className="text-xs font-semibold text-slate-500 tracking-wider">
             Fetching secure barcode Data...
           </p>
         </div>
@@ -426,7 +475,7 @@ export default function BarcodeDetail() {
         <div className="p-5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 rounded-3xl text-red-650 dark:text-red-400 text-xs font-bold flex items-center gap-3">
           <AlertCircle className="w-5 h-5 shrink-0" />
           <div>
-            <p className="font-black">Error loading barcode details</p>
+            <p className="font-bold">Error loading barcode details</p>
             <p className="text-[10px] opacity-80 mt-0.5">Please check network connection or verify the barcode serial ID.</p>
           </div>
         </div>
@@ -437,10 +486,10 @@ export default function BarcodeDetail() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm flex flex-col md:flex-row gap-6 justify-between items-stretch">
             {/* Left Card Detail */}
             <div className="flex flex-col justify-center items-start border border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/20 p-5 rounded-2xl md:w-1/4">
-              <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider mb-2">Barcode Detail</span>
+              <span className="text-[10px] text-slate-400 font-extrabold tracking-wider mb-2">Barcode Detail</span>
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-black text-slate-900 dark:text-white font-mono">{bc.barcode}</h2>
-                <span className="text-[9px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950/30 px-2 py-0.5 rounded uppercase font-mono">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white font-mono">{bc.barcode}</h2>
+                <span className="text-[9px] font-extrabold bg-blue-50 text-blue-600 dark:bg-blue-950/30 px-2 py-0.5 rounded font-mono">
                   {bc.materialName}
                 </span>
               </div>
@@ -449,27 +498,27 @@ export default function BarcodeDetail() {
             {/* Right Info Grid */}
             <div className="flex-1 grid grid-cols-2 md:grid-cols-3 gap-6 p-1">
               <div>
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Material</span>
+                <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block mb-1">Material</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">{bc.materialName}</span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Barcode</span>
+                <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block mb-1">Barcode</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200 text-xs font-mono">{bc.barcode}</span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Shares / Owner</span>
+                <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block mb-1">Shares / Owner</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200 text-xs">
                   {bc.owner?.fullName || 'Stores'}
                 </span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Unit Valuation</span>
+                <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block mb-1">Unit Valuation</span>
                 <span className="font-extrabold text-blue-650 dark:text-blue-400 text-xs">
                   {price > 0 ? `₹${price.toLocaleString('en-IN')}` : '₹0'}
                 </span>
               </div>
               <div>
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block mb-1">Transaction Combined Valuation</span>
+                <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block mb-1">Transaction Combined Valuation</span>
                 <span className="font-extrabold text-emerald-600 dark:text-emerald-400 text-xs">
                   {bc.transaction?.materials
                     ? `₹${bc.transaction.materials.reduce((sum, m) => sum + ((m.price || 0) * m.quantity), 0).toLocaleString('en-IN')}`
@@ -478,7 +527,7 @@ export default function BarcodeDetail() {
                 </span>
               </div>
               <div className="flex flex-col items-start gap-1">
-                <span className="text-[9px] text-slate-400 font-extrabold uppercase tracking-wider block">Status</span>
+                <span className="text-[9px] text-slate-400 font-extrabold tracking-wider block">Status</span>
                 <Badge variant={bc.status?.toUpperCase() === 'RETURNED' ? 'secondary' : bc.status?.toUpperCase() === 'CANCELLED' ? 'danger' : bc.status?.toUpperCase() === 'ACTIVE' ? 'primary' : 'success'}>
                   {bc.status?.toUpperCase() === 'ACTIVE' ? 'Active (Transferred)' : bc.status?.toUpperCase()}
                 </Badge>
@@ -495,8 +544,8 @@ export default function BarcodeDetail() {
                 {/* Photos Panel with individual GPS Locations */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col gap-3">
                   <div className="flex justify-between items-center pb-2 border-b border-slate-50 dark:border-slate-800/60">
-                    <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider">Photos</h4>
-                    <span className="text-[10px] text-blue-650 hover:underline font-bold cursor-pointer">View All</span>
+                    <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-wider">Photos</h4>
+                    <span className="text-[10px] text-blue-650 dark:text-blue-400 hover:underline font-bold cursor-pointer">View All</span>
                   </div>
                   <div className="flex flex-col gap-4">
                     {!bc.photos || bc.photos.length === 0 ? (
@@ -508,7 +557,7 @@ export default function BarcodeDetail() {
                             <img src={p.url} alt={`Scan ${i + 1}`} className="w-full h-full object-cover" />
                           </div>
                           <div className="flex flex-col gap-1 text-xs">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Photo #{i + 1} Location (GPS)</span>
+                            <span className="text-[10px] text-slate-400 font-bold tracking-wider">Photo #{i + 1} Location (GPS)</span>
                             {(() => {
                               const pLat = p ? parseFloat(p.lat) : NaN;
                               const pLng = p ? parseFloat(p.lng) : NaN;
@@ -524,7 +573,7 @@ export default function BarcodeDetail() {
                                     <p className="font-mono font-bold text-slate-800 dark:text-slate-200">
                                       {pLat.toFixed(4)}° N, {pLng.toFixed(4)}° E
                                     </p>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">
+                                    <p className="text-[10px] text-slate-500 font-bold tracking-wide">
                                       {p.address || 'Captured Location'}
                                     </p>
                                   </>
@@ -535,7 +584,7 @@ export default function BarcodeDetail() {
                                     <p className="font-mono font-bold text-slate-800 dark:text-slate-200">
                                       {bcLat.toFixed(4)}° N, {bcLng.toFixed(4)}° E
                                     </p>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wide">
+                                    <p className="text-[10px] text-slate-500 font-bold tracking-wide">
                                       {bc.gps.address || 'Recorded GPS Location'}
                                     </p>
                                   </>
@@ -553,21 +602,21 @@ export default function BarcodeDetail() {
 
                 {/* Remarks Panel */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col gap-2">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider pb-2 border-b border-slate-50 dark:border-slate-800/60">Remarks</h4>
-                  <p className="text-xs text-slate-600 dark:text-slate-350 font-semibold leading-relaxed mt-1">
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-wider pb-2 border-b border-slate-50 dark:border-slate-800/60">Remarks</h4>
+                  <p className="text-xs text-slate-600 dark:text-slate-100 font-semibold leading-relaxed mt-1">
                     {bc.history?.[bc.history.length - 1]?.remarks || 'No remarks recorded for this status lot.'}
                   </p>
                 </div>
 
                 {/* Attachments Panel */}
                 <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm flex flex-col gap-2">
-                  <h4 className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider pb-2 border-b border-slate-50 dark:border-slate-800/60">Attachments</h4>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 tracking-wider pb-2 border-b border-slate-50 dark:border-slate-800/60">Attachments</h4>
                   {bc.documents?.length === 0 ? (
                     <p className="text-xs text-slate-400 italic mt-1">No documents</p>
                   ) : (
                     <div className="flex flex-col gap-2.5 mt-1">
                       {bc.documents.map((doc, idx) => (
-                        <a key={idx} href={doc.url} className="text-xs text-blue-650 hover:underline font-bold" target="_blank" rel="noreferrer">
+                        <a key={idx} href={doc.url} className="text-xs text-blue-650 dark:text-blue-400 hover:underline font-bold" target="_blank" rel="noreferrer">
                           {doc.name}
                         </a>
                       ))}
@@ -839,7 +888,7 @@ export default function BarcodeDetail() {
                         <div key={idx} className="relative flex items-start">
                           {/* Date and Time on the left of the line */}
                           <div className="absolute -left-[110px] w-[85px] text-right pr-3.5 flex flex-col gap-0.5 select-none">
-                            <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold uppercase tracking-wide">
+                            <span className="text-[10px] text-slate-800 dark:text-slate-200 font-extrabold tracking-wide">
                               {isLogDateValid ? logDate.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                             </span>
                             <span className="text-[9px] text-slate-400 block font-bold">
@@ -853,10 +902,10 @@ export default function BarcodeDetail() {
                           {/* Right side: Action details */}
                           <div className="pl-4">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h5 className="text-xs font-black text-slate-800 dark:text-slate-100 font-sans leading-snug">
+                              <h5 className="text-xs font-bold text-slate-800 dark:text-slate-100 font-sans leading-snug">
                                 {actionLabel}
                               </h5>
-                              <span className={`text-[8px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-sm
+                              <span className={`text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-sm
                             ${statusLabel === 'PENDING'
                                   ? 'bg-slate-100 dark:bg-slate-800 text-slate-400'
                                   : statusLabel === 'REJECTED'
@@ -867,7 +916,7 @@ export default function BarcodeDetail() {
                                 {statusLabel}
                               </span>
                             </div>
-                            <p className="text-[10px] text-slate-500 font-medium italic mt-0.5">
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium italic mt-0.5">
                               By: {byLabel} {log.remarks ? `— ${log.remarks}` : ''}
                             </p>
                           </div>
@@ -892,10 +941,10 @@ export default function BarcodeDetail() {
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
                 <div>
-                  <h3 className="text-lg font-black text-slate-900 dark:text-white">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white">
                     {isInvoice ? 'Convert Barcode to Invoice' : 'Convert DC Type'}
                   </h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+                  <p className="text-[10px] text-slate-400 font-bold tracking-wider mt-0.5">
                     {isInvoice ? 'Invoice Conversion Request (Accounts Approval)' : 'Challan type migration event'}
                   </p>
                 </div>
@@ -907,17 +956,17 @@ export default function BarcodeDetail() {
               <form onSubmit={handleBarcodeCloseSubmit} className="mt-4 flex flex-col gap-4 text-xs">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <span className="block text-slate-500 font-bold uppercase tracking-wider mb-1">Target Barcode</span>
-                    <span className="block font-mono font-black text-blue-650 dark:text-blue-450 text-xs mt-0.5">{barcode}</span>
+                    <span className="block text-slate-500 font-bold tracking-wider mb-1">Target Barcode</span>
+                    <span className="block font-mono font-bold text-blue-650 dark:text-blue-450 text-xs mt-0.5">{barcode}</span>
                   </div>
                   <div>
-                    <span className="block text-slate-500 font-bold uppercase tracking-wider mb-1">Material</span>
+                    <span className="block text-slate-500 font-bold tracking-wider mb-1">Material</span>
                     <span className="block font-sans font-extrabold text-slate-850 dark:text-slate-205 text-xs mt-0.5 truncate">{materialName}</span>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Target Document Type *</label>
+                  <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Target Document Type *</label>
                   {isInvoice ? (
                     <input
                       type="text"
@@ -939,7 +988,7 @@ export default function BarcodeDetail() {
 
                 {['DC FOC', 'Invoice'].includes(barcodeCloseDocType) && (
                   <div>
-                    <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Choose Management Approver *</label>
+                    <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Choose Management Approver *</label>
                     <select
                       value={selectedManagementId}
                       onChange={(e) => setSelectedManagementId(e.target.value)}
@@ -955,7 +1004,7 @@ export default function BarcodeDetail() {
                 )}
 
                 <div>
-                  <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">New Document Number *</label>
+                  <label className="block text-slate-500 font-bold tracking-wider mb-1.5">New Document Number *</label>
                   <input
                     type="text"
                     value={barcodeCloseDocNumber}
@@ -967,7 +1016,7 @@ export default function BarcodeDetail() {
                 </div>
 
                 <div>
-                  <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Remarks / Reason *</label>
+                  <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Remarks / Reason *</label>
                   <textarea
                     value={barcodeCloseRemarks}
                     onChange={(e) => setBarcodeCloseRemarks(e.target.value)}
@@ -996,8 +1045,8 @@ export default function BarcodeDetail() {
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-md p-6 shadow-xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="text-sm font-black text-slate-800 dark:text-white uppercase tracking-wider">Exchange Barcode</h3>
-                <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Old Barcode: {barcode}</p>
+                <h3 className="text-sm font-bold text-slate-800 dark:text-white tracking-wider">Exchange Barcode</h3>
+                <p className="text-[10px] text-slate-400 font-bold mt-1">Old Barcode: {barcode}</p>
               </div>
               <button onClick={() => setExchangeModalOpen(false)} className="p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-650">
                 <X className="w-4 h-4" />
@@ -1007,7 +1056,7 @@ export default function BarcodeDetail() {
             <form onSubmit={handleExchangeSubmit} className="flex flex-col gap-4 text-xs font-semibold text-slate-600">
 
               <div>
-                <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5">Under Warranty Form: Failure Reason *</label>
+                <label className="block text-slate-500 font-bold tracking-wider mb-1.5">Under Warranty Form: Failure Reason *</label>
                 <textarea
                   value={exchangeWarrantyReason}
                   onChange={(e) => setExchangeWarrantyReason(e.target.value)}

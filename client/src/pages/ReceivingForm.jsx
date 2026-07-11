@@ -80,7 +80,7 @@ export default function ReceivingForm() {
         </button>
         <div>
           <h1 className="text-lg font-extrabold text-slate-800">Receive Materials</h1>
-          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+          <p className="text-xs text-slate-500 font-semibold tracking-wider">
             Transaction ID: {txnData.transactionId}
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function ReceivingForm() {
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Dispatched items list summary */}
         <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-2">
-          <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Dispatched Items checklist</h3>
+          <h3 className="text-xs font-extrabold text-slate-800 tracking-wider">Dispatched Items checklist</h3>
           <div className="divide-y divide-slate-100 text-xs font-bold text-slate-700">
             {txnData.materials?.map((m, idx) => (
               <div key={idx} className="py-2 flex justify-between">
@@ -101,7 +101,7 @@ export default function ReceivingForm() {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Physical Condition</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Physical Condition</label>
           <select
             value={condition}
             onChange={(e) => setCondition(e.target.value)}
@@ -114,7 +114,7 @@ export default function ReceivingForm() {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Remarks / Verification notes</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Remarks / Verification notes</label>
           <textarea
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
@@ -126,7 +126,7 @@ export default function ReceivingForm() {
 
         {/* Live Photo Attachment */}
         <div className="space-y-2">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase">GEO-Tagged Delivery Verification Photo (Mandatory)</label>
+          <label className="block text-[10px] font-bold text-slate-500">GEO-Tagged Delivery Verification Photo (Mandatory)</label>
           {capturedPhoto ? (
             <div className="relative border border-slate-200 rounded-2xl overflow-hidden aspect-video w-64 bg-slate-100">
               <img src={capturedPhoto} alt="Captured preview" className="w-full h-full object-cover" />

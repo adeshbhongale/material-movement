@@ -21,7 +21,7 @@ const EditTransactionPage = () => {
   // Form State
   const [expectedReturnDate, setExpectedReturnDate] = useState('');
   const [description, setDescription] = useState('');
-  
+
   // Routing dropdowns state
   const [mgtApprovers, setMgtApprovers] = useState([]);
   const [selectedMgt, setSelectedMgt] = useState('');
@@ -104,7 +104,7 @@ const EditTransactionPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!expectedReturnDate) {
       setError('Expected return date is required');
       return;
@@ -163,7 +163,7 @@ const EditTransactionPage = () => {
     return (
       <div className="h-[60vh] w-full flex flex-col items-center justify-center gap-3">
         <Spinner size="lg" />
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+        <p className="text-xs font-semibold text-slate-500 tracking-wider">
           Loading Request Details...
         </p>
       </div>
@@ -178,7 +178,7 @@ const EditTransactionPage = () => {
           <ArrowLeft className="w-5 h-5" />
         </Button>
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white m-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white m-0">
             Edit Material Request
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Sourcing and logistics transfer request with barcode loops</p>
@@ -194,7 +194,7 @@ const EditTransactionPage = () => {
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Card title="Simplified Sourcing Request Form">
           <div className="grid grid-cols-1 gap-5 text-xs font-semibold">
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <Input
                 id="expectedReturnDate"
@@ -218,7 +218,7 @@ const EditTransactionPage = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 font-semibold">Purpose / Description *</label>
+              <label className="block text-xs font-bold text-slate-500 tracking-wider mb-1.5 font-semibold">Purpose / Description *</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -231,7 +231,7 @@ const EditTransactionPage = () => {
 
             <div className="border-t border-slate-100 dark:border-slate-800 pt-5 space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-black text-slate-700 dark:text-slate-350 uppercase tracking-wider">Materials Needed</h3>
+                <h3 className="text-xs font-bold text-slate-700 dark:text-slate-350 tracking-wider">Materials Needed</h3>
                 <Button size="xs" variant="outline" type="button" onClick={handleAddMaterial} className="flex items-center gap-1">
                   <Plus className="w-3.5 h-3.5" /> Add Row
                 </Button>

@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { ArrowLeftRight, ArrowRight, Eye, Layers } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeftRight, Eye, Calendar, Clock, ArrowRight, Layers } from 'lucide-react';
 import Badge from '../../components/ui/Badge';
 import Card from '../../components/ui/Card';
 import api from '../../lib/axios';
@@ -55,7 +55,7 @@ const TransferListPage = () => {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white m-0 flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white m-0 flex items-center gap-2">
             <ArrowLeftRight className="w-6 h-6 text-blue-600" /> Transferred Barcodes List
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">Barcode-wise movement log grouped by their parent transaction</p>
@@ -75,7 +75,7 @@ const TransferListPage = () => {
       ) : (
         <div className="flex flex-col gap-6">
           {Object.entries(groupedTransfers).map(([txnId, items]) => (
-            <div 
+            <div
               key={txnId}
               className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden"
             >
@@ -83,15 +83,15 @@ const TransferListPage = () => {
               <div className="px-5 py-4 bg-slate-50 dark:bg-slate-950/40 border-b border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <Layers className="w-4 h-4 text-blue-600" />
-                  <span className="text-[10px] text-slate-400 font-extrabold uppercase tracking-wider block">Parent Transaction</span>
-                  <span 
+                  <span className="text-[10px] text-slate-400 font-extrabold tracking-wider block">Parent Transaction</span>
+                  <span
                     onClick={() => navigate(`/transactions/${txnId}`)}
-                    className="font-black text-slate-800 dark:text-slate-105 hover:underline cursor-pointer font-mono text-sm tracking-wide"
+                    className="font-bold text-slate-800 dark:text-slate-200 hover:underline cursor-pointer font-mono text-sm tracking-wide"
                   >
                     {txnId}
                   </span>
                 </div>
-                <Badge variant="primary" className="text-[10px] font-black px-2.5 py-0.5 uppercase tracking-wider">
+                <Badge variant="primary" className="text-[10px] font-bold px-2.5 py-0.5 tracking-wider">
                   {items.length} {items.length === 1 ? 'Transfer' : 'Transfers'}
                 </Badge>
               </div>
@@ -100,7 +100,7 @@ const TransferListPage = () => {
               <div className="overflow-x-auto">
                 <table className="w-full text-xs text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] uppercase font-bold text-slate-400 bg-slate-50/30 dark:bg-slate-900/10">
+                    <tr className="border-b border-slate-100 dark:border-slate-800 text-[10px] font-bold text-slate-400 bg-slate-50/30 dark:bg-slate-900/10">
                       <th className="px-5 py-3">Barcode</th>
                       <th className="px-5 py-3">Movement Route</th>
                       <th className="px-5 py-3">Routing Type</th>
@@ -112,14 +112,14 @@ const TransferListPage = () => {
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {items.map((row) => (
-                      <tr 
-                        key={row._id} 
+                      <tr
+                        key={row._id}
                         className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors"
                       >
                         <td className="px-5 py-3.5 whitespace-nowrap">
-                          <span 
+                          <span
                             onClick={() => navigate(`/barcodes/${row.barcode}`)}
-                            className="font-extrabold text-blue-650 hover:underline cursor-pointer tracking-wider font-mono"
+                            className="font-extrabold text-blue-650 dark:text-blue-400 hover:underline cursor-pointer tracking-wider font-mono"
                           >
                             {row.barcode}
                           </span>
@@ -149,7 +149,7 @@ const TransferListPage = () => {
                           })}
                         </td>
                         <td className="px-5 py-3.5">
-                          <span className="text-slate-550 italic block truncate max-w-xs">{row.remarks || '-'}</span>
+                          <span className="text-slate-550 dark:text-slate-300 italic block truncate max-w-xs">{row.remarks || '-'}</span>
                         </td>
                         <td className="px-5 py-3.5 text-right whitespace-nowrap">
                           <button

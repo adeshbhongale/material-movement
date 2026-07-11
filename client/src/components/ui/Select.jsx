@@ -16,7 +16,7 @@ const Select = React.forwardRef(({
       {label && (
         <label
           htmlFor={id}
-          className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider"
+          className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wider"
         >
           {label} {required && <span className="text-red-500">*</span>}
         </label>
@@ -35,8 +35,8 @@ const Select = React.forwardRef(({
             ${Icon ? 'pl-10' : 'pl-3.5'} pr-10 py-2.5
             bg-white text-slate-900 border-slate-300 focus:ring-primary focus:border-primary
             dark:bg-slate-900 dark:text-white dark:border-slate-700 dark:focus:ring-primary
-            ${error 
-              ? 'border-red-500 focus:ring-red-500 focus:border-red-500 dark:border-red-500' 
+            ${error
+              ? 'border-red-500 focus:ring-red-500 focus:border-red-500 dark:border-red-500'
               : 'border-slate-300 focus:ring-primary dark:border-slate-700'
             }
             disabled:bg-slate-50 disabled:text-slate-400 dark:disabled:bg-slate-950 dark:disabled:text-slate-600

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { ChevronDown, ChevronRight, Layers, Search } from 'lucide-react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, ChevronRight, Layers } from 'lucide-react';
 import api from '../lib/api';
 
 export default function MaterialsTree() {
@@ -31,11 +31,11 @@ export default function MaterialsTree() {
   }, {}) || {};
 
   return (
-    <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6 animate-fade-in">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6 animate-fade-in">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-extrabold text-slate-800">Materials & Barcodes Tree</h1>
-        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider mt-0.5">
+        <h1 className="text-xl font-extrabold text-slate-800 dark:text-white">Materials & Barcodes Tree</h1>
+        <p className="text-xs text-slate-500 font-semibold tracking-wider mt-0.5">
           View hierarchical ownership lineage of each barcode serial unit
         </p>
       </div>
@@ -50,7 +50,7 @@ export default function MaterialsTree() {
           placeholder="Search by material name, barcode serial..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-slate-50 border border-slate-200 focus:border-primary rounded-xl py-2 pl-9 pr-4 text-xs text-slate-700 outline-none transition"
+          className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-primary rounded-xl py-2 pl-9 pr-4 text-xs text-slate-700 dark:text-slate-200 outline-none transition"
         />
       </div>
 
@@ -64,11 +64,11 @@ export default function MaterialsTree() {
           Object.entries(materialsGroup).map(([materialName, list]) => {
             const isExpanded = expandedItems[materialName];
             return (
-              <div key={materialName} className="border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+              <div key={materialName} className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm">
                 {/* Parent Node header */}
                 <button
                   onClick={() => toggleExpand(materialName)}
-                  className="w-full flex justify-between items-center bg-slate-50 hover:bg-slate-100 p-4 transition font-extrabold text-xs text-slate-700 uppercase"
+                  className="w-full flex justify-between items-center bg-slate-50 dark:bg-slate-950/60 hover:bg-slate-100 dark:hover:bg-slate-800 p-4 transition font-extrabold text-xs text-slate-700 dark:text-slate-200"
                 >
                   <div className="flex items-center gap-2">
                     <Layers className="w-4 h-4 text-primary shrink-0" />
@@ -79,17 +79,17 @@ export default function MaterialsTree() {
 
                 {/* Children Node list */}
                 {isExpanded && (
-                  <div className="divide-y divide-slate-100 bg-white">
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900">
                     {list.map((bc) => (
                       <div
                         key={bc._id}
                         onClick={() => navigate(`/barcodes/${bc.barcode}`)}
-                        className="p-3.5 pl-8 flex justify-between items-center text-xs hover:bg-slate-50 cursor-pointer transition"
+                        className="p-3.5 pl-8 flex justify-between items-center text-xs hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition"
                       >
                         <div className="space-y-0.5">
-                          <p className="font-bold text-slate-800">{bc.barcode}</p>
-                          <p className="text-[10px] text-slate-400 font-bold">
-                            Owner: <span className="text-slate-700">{bc.owner?.fullName}</span>
+                          <p className="font-bold text-slate-800 dark:text-slate-100">{bc.barcode}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-300 font-bold">
+                            Owner: <span className="text-slate-700 dark:text-slate-300">{bc.owner?.fullName}</span>
                           </p>
                         </div>
 

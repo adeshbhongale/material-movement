@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { Paperclip, Send, Smile, X } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import { io } from 'socket.io-client';
-import { X, Send, Paperclip, Smile, Image as ImageIcon, FileText } from 'lucide-react';
+import api from '../lib/api';
 import useAuthStore from '../store/authStore';
 import useUIStore from '../store/uiStore';
-import api from '../lib/api';
 
 export default function ChatDrawer() {
   const user = useAuthStore((s) => s.user);
@@ -75,13 +75,13 @@ export default function ChatDrawer() {
 
   const handleInputChange = (e) => {
     setInputText(e.target.value);
-    
+
     // Typing indicator trigger
     if (socketRef.current && chatTransactionId) {
       socketRef.current.emit('typing', { transactionId: chatTransactionId, userName: user.fullName });
-      
+
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-      
+
       typingTimeoutRef.current = setTimeout(() => {
         socketRef.current.emit('stop_typing', { transactionId: chatTransactionId });
       }, 2000);
@@ -130,7 +130,7 @@ export default function ChatDrawer() {
         {/* Member list bar */}
         <div className="px-4 py-2 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <span className="text-xs font-semibold text-slate-500 uppercase">Members:</span>
+            <span className="text-xs font-semibold text-slate-500">Members:</span>
             <span className="text-xs font-bold text-primary bg-primary-light px-2 py-0.5 rounded-full">
               {members.length}
             </span>
@@ -209,7 +209,7 @@ export default function ChatDrawer() {
               >
                 <Paperclip className="w-5 h-5" />
               </button>
-              
+
               <input
                 type="text"
                 value={inputText}
@@ -221,11 +221,10 @@ export default function ChatDrawer() {
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className={`p-2.5 rounded-xl transition ${
-                  inputText.trim()
+                className={`p-2.5 rounded-xl transition ${inputText.trim()
                     ? 'bg-primary text-white hover:bg-primary-dark shadow-md'
                     : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                }`}
+                  }`}
               >
                 <Send className="w-4 h-4" />
               </button>

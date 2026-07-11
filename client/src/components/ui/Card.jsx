@@ -1,4 +1,3 @@
-import React from 'react';
 
 const Card = ({
   children,
@@ -57,7 +56,7 @@ export const StatsCard = ({
       {...props}
     >
       <div className="flex flex-col gap-1 min-w-0">
-        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider truncate">
+        <span className="text-[10px] sm:text-xs font-semibold text-slate-500 dark:text-slate-400 tracking-wider truncate">
           {title}
         </span>
         <span className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">

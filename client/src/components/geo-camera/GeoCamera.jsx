@@ -245,7 +245,7 @@ const GeoCamera = ({ onCapture, label = 'Evidence Photo' }) => {
   return (
     <div className="w-full flex flex-col gap-4 border border-slate-200 dark:border-slate-800 rounded-xl p-5 bg-slate-50/50 dark:bg-slate-900/40">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 tracking-wider">
           {label}
         </span>
         {capturedPhoto && (

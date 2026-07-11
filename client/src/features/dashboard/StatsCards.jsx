@@ -1,12 +1,9 @@
-import React from 'react';
 import {
-  Package,
-  Clock,
-  Reply,
   CheckCircle,
-  ArrowRight
+  Clock,
+  Package,
+  Reply
 } from 'lucide-react';
-import { StatsCard } from '../../components/ui/Card';
 
 const StatsCards = ({ stats, barcodesCount = {}, transactionsCount = {} }) => {
   const cards = [
@@ -47,15 +44,15 @@ const StatsCards = ({ stats, barcodesCount = {}, transactionsCount = {} }) => {
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4.5 md:gap-6">
       {cards.map((card, idx) => (
-        <div 
-          key={idx} 
+        <div
+          key={idx}
           className={`bg-white dark:bg-slate-900 border ${card.borderColor} p-5 rounded-xl shadow-sm flex items-center justify-between gap-4`}
         >
           <div className="min-w-0">
-            <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block mb-0.5">
+            <span className="text-[10px] font-extrabold tracking-wider text-slate-400 block mb-0.5">
               {card.title}
             </span>
-            <h3 className="text-2xl font-black text-slate-800 dark:text-white leading-none">
+            <h3 className="text-2xl font-bold text-slate-800 dark:text-white leading-none">
               {card.value}
             </h3>
             <span className="text-[10px] text-slate-500 font-semibold mt-1 block">

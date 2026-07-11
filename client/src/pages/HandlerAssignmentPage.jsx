@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, UserCheck } from 'lucide-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import api from '../lib/api';
 
 export default function HandlerAssignmentPage() {
@@ -54,7 +54,7 @@ export default function HandlerAssignmentPage() {
         </button>
         <div>
           <h1 className="text-lg font-extrabold text-slate-800 font-sans">Assign Delivery Handler</h1>
-          <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">
+          <p className="text-xs text-slate-500 font-semibold tracking-wider">
             Transaction: {id}
           </p>
         </div>
@@ -62,7 +62,7 @@ export default function HandlerAssignmentPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Select Handler</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Select Handler</label>
           <select
             value={handlerId}
             onChange={(e) => setHandlerId(e.target.value)}
@@ -77,7 +77,7 @@ export default function HandlerAssignmentPage() {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase font-sans">Expected Delivery Date & Time</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 font-sans">Expected Delivery Date & Time</label>
           <input
             type="datetime-local"
             value={expectedDeliveryDate}
@@ -88,7 +88,7 @@ export default function HandlerAssignmentPage() {
         </div>
 
         <div>
-          <label className="block text-[10px] font-bold text-slate-500 mb-1.5 uppercase">Instruction / Remarks</label>
+          <label className="block text-[10px] font-bold text-slate-500 mb-1.5">Instruction / Remarks</label>
           <textarea
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}

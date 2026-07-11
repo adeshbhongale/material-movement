@@ -193,8 +193,8 @@ const AuditLogPage = () => {
             <Layers className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-slate-500 font-semibold block uppercase tracking-wider">Total Actions Logged</span>
-            <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">
+            <span className="text-xs text-slate-500 font-semibold block tracking-wider">Total Actions Logged</span>
+            <span className="text-2xl font-bold text-slate-800 dark:text-white mt-1 block">
               {totalLogs.toLocaleString()}
             </span>
           </div>
@@ -205,8 +205,8 @@ const AuditLogPage = () => {
             <ShieldAlert className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-slate-500 font-semibold block uppercase tracking-wider">Deletes & Rejections</span>
-            <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">
+            <span className="text-xs text-slate-500 font-semibold block tracking-wider">Deletes & Rejections</span>
+            <span className="text-2xl font-bold text-slate-800 dark:text-white mt-1 block">
               {logs.filter(l => ['delete', 'reject'].includes(l.action?.toLowerCase())).length} on Page
             </span>
           </div>
@@ -217,8 +217,8 @@ const AuditLogPage = () => {
             <CheckCircle className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-slate-500 font-semibold block uppercase tracking-wider">Creates & Approvals</span>
-            <span className="text-2xl font-black text-slate-800 dark:text-white mt-1 block">
+            <span className="text-xs text-slate-500 font-semibold block tracking-wider">Creates & Approvals</span>
+            <span className="text-2xl font-bold text-slate-800 dark:text-white mt-1 block">
               {logs.filter(l => ['create', 'approve'].includes(l.action?.toLowerCase())).length} on Page
             </span>
           </div>
@@ -318,22 +318,22 @@ const AuditLogPage = () => {
             {/* Metadata Summary Banner */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 dark:bg-slate-950/60 border border-slate-100 dark:border-slate-800/80 rounded-2xl">
               <div>
-                <span className="font-semibold text-slate-400 uppercase tracking-wider text-[9px] block mb-0.5">Actor</span>
+                <span className="font-semibold text-slate-400 tracking-wider text-[9px] block mb-0.5">Actor</span>
                 <div className="flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-slate-400" />
                   <p className="font-bold text-xs text-slate-700 dark:text-slate-200">{selectedLog.user?.fullName || 'SYSTEM'}</p>
                 </div>
               </div>
               <div>
-                <span className="font-semibold text-slate-400 uppercase tracking-wider text-[9px] block mb-0.5">Operation</span>
+                <span className="font-semibold text-slate-400 tracking-wider text-[9px] block mb-0.5">Operation</span>
                 <Badge variant={getActionColor(selectedLog.action)}>{selectedLog.action}</Badge>
               </div>
               <div>
-                <span className="font-semibold text-slate-400 uppercase tracking-wider text-[9px] block mb-0.5">Entity</span>
+                <span className="font-semibold text-slate-400 tracking-wider text-[9px] block mb-0.5">Entity</span>
                 <p className="font-semibold text-xs text-slate-700 dark:text-slate-200">{selectedLog.entity} ({selectedLog.entityId})</p>
               </div>
               <div>
-                <span className="font-semibold text-slate-400 uppercase tracking-wider text-[9px] block mb-0.5">Timestamp</span>
+                <span className="font-semibold text-slate-400 tracking-wider text-[9px] block mb-0.5">Timestamp</span>
                 <p className="text-xs text-slate-700 dark:text-slate-200">{new Date(selectedLog.createdAt).toLocaleString()}</p>
               </div>
             </div>
@@ -352,11 +352,11 @@ const AuditLogPage = () => {
               if (diffs.length > 0) {
                 return (
                   <div className="flex flex-col gap-2">
-                    <span className="font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Property Modification Diff ({diffs.length} fields changed)</span>
+                    <span className="font-bold text-slate-500 dark:text-slate-400 tracking-wider text-[10px]">Property Modification Diff ({diffs.length} fields changed)</span>
                     <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden text-xs max-h-80 overflow-y-auto">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-400 text-[10px] uppercase font-bold tracking-wider">
+                          <tr className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-400 text-[10px] font-bold tracking-wider">
                             <th className="p-3">Field</th>
                             <th className="p-3">Previous State</th>
                             <th className="p-3">Updated State</th>

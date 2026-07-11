@@ -120,7 +120,7 @@ const TransactionListPage = () => {
       cell: (row) => (
         <div className="flex flex-col">
           <span className="font-extrabold text-slate-800 dark:text-slate-200">{row.requester?.fullName || row.sender?.fullName}</span>
-          <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">{row.requester?.employeeId || row.sender?.employeeId}</span>
+          <span className="text-[9px] text-slate-400 font-bold tracking-wider">{row.requester?.employeeId || row.sender?.employeeId}</span>
         </div>
       ),
     },
@@ -192,7 +192,7 @@ const TransactionListPage = () => {
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <span className="text-[9px] font-black text-slate-650 dark:text-slate-400 shrink-0">
+            <span className="text-[9px] font-bold text-slate-650 dark:text-slate-400 shrink-0">
               {progress}%
             </span>
           </div>
@@ -216,7 +216,7 @@ const TransactionListPage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white m-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white m-0">
             {allParam ? 'Enterprise Sourcing Directory' : 'My Transactions'}
           </h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -256,7 +256,7 @@ const TransactionListPage = () => {
               placeholder="Search by Challan ID, description, material name..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-xs font-semibold rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 dark:bg-slate-950 dark:border-slate-800 text-xs font-semibold rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-slate-700 dark:text-slate-200"
             />
           </div>
 
@@ -340,7 +340,7 @@ const TransactionListPage = () => {
 
         {/* Date Filters */}
         <div className="flex flex-wrap items-center gap-3.5 pt-3.5 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex items-center gap-2 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+          <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 font-bold tracking-wider text-[10px]">
             <Calendar className="w-4 h-4 text-slate-400" />
             <span>Filter Date Range:</span>
           </div>
@@ -352,7 +352,7 @@ const TransactionListPage = () => {
                 setStartDate(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-slate-200"
             />
             <span className="text-slate-400"><ArrowRight className="w-3.5 h-3.5" /></span>
             <input
@@ -362,7 +362,7 @@ const TransactionListPage = () => {
                 setEndDate(e.target.value);
                 setCurrentPage(1);
               }}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none"
+              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-semibold focus:ring-1 focus:ring-blue-500 focus:outline-none text-slate-700 dark:text-slate-200"
             />
           </div>
           {(search || docType || startDate || endDate) && (

@@ -179,7 +179,7 @@ export default function ReturnMultiple() {
         </button>
         <div>
           <h1 className="text-lg font-extrabold text-slate-850 dark:text-white">Return Multiple Materials</h1>
-          <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+          <p className="text-xs text-slate-400 font-semibold tracking-wider">
             Transaction: {txn.transactionId}
           </p>
         </div>
@@ -190,12 +190,12 @@ export default function ReturnMultiple() {
         {/* Checklist of eligible barcodes */}
         <div className="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl space-y-3">
           <div className="flex justify-between items-center pb-2 border-b border-slate-100 dark:border-slate-800/80">
-            <h3 className="font-extrabold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Select Active Barcodes to Return</h3>
+            <h3 className="font-extrabold text-slate-800 dark:text-slate-200 tracking-wider">Select Active Barcodes to Return</h3>
             {activeOwnedBarcodes.length > 0 && (
               <button
                 type="button"
                 onClick={handleSelectAll}
-                className="text-[10px] text-blue-650 hover:underline font-extrabold uppercase"
+                className="text-[10px] text-blue-650 hover:underline font-extrabold"
               >
                 {selectedBarcodes.size === activeOwnedBarcodes.length ? 'Deselect All' : 'Select All'}
               </button>
@@ -234,7 +234,7 @@ export default function ReturnMultiple() {
 
         {/* Reason */}
         <div>
-          <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+          <label className="block text-slate-500 font-bold tracking-wider mb-1.5 text-[10px]">
             Return Reason *
           </label>
           <select
@@ -254,7 +254,7 @@ export default function ReturnMultiple() {
         {/* Condition & Remarks */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+            <label className="block text-slate-500 font-bold tracking-wider mb-1.5 text-[10px]">
               Material Condition *
             </label>
             <select
@@ -269,7 +269,7 @@ export default function ReturnMultiple() {
           </div>
 
           <div>
-            <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+            <label className="block text-slate-500 font-bold tracking-wider mb-1.5 text-[10px]">
               Remarks / Remarks
             </label>
             <input
@@ -284,7 +284,7 @@ export default function ReturnMultiple() {
 
         {/* Return Method */}
         <div>
-          <label className="block text-slate-500 font-bold uppercase tracking-wider mb-2 text-[10px]">
+          <label className="block text-slate-500 font-bold tracking-wider mb-2 text-[10px]">
             Return Dispatch Method
           </label>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -324,7 +324,7 @@ export default function ReturnMultiple() {
 
         {returnMethod === 'handler' && (
           <div className="pt-2 animate-in slide-in-from-top-2 duration-200">
-            <label className="block text-slate-500 font-bold uppercase tracking-wider mb-1.5 text-[10px]">
+            <label className="block text-slate-500 font-bold tracking-wider mb-1.5 text-[10px]">
               Select Sourcing Handler *
             </label>
             <div className="relative handler-dropdown-container">
@@ -367,7 +367,7 @@ export default function ReturnMultiple() {
                             setHandlerDropdownOpen(false);
                             setHandlerSearchQuery('');
                           }}
-                          className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer block transition ${emp._id === handlerId ? 'bg-primary/5 text-primary font-black' : 'text-slate-705'}`}
+                          className={`w-full text-left px-3.5 py-2 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer block transition ${emp._id === handlerId ? 'bg-primary/5 text-primary font-bold' : 'text-slate-705'}`}
                         >
                           {emp.fullName} ({emp.employeeId})
                         </button>
@@ -386,7 +386,7 @@ export default function ReturnMultiple() {
 
         {/* Live Photo Attachment */}
         <div className="space-y-2">
-          <label className="block text-[10px] font-bold text-slate-500 uppercase">Live Photo with Metadata Overlay</label>
+          <label className="block text-[10px] font-bold text-slate-500">Live Photo with Metadata Overlay</label>
           {capturedPhoto ? (
             <div className="relative border border-slate-200 rounded-2xl overflow-hidden aspect-video w-64 bg-slate-100">
               <img src={capturedPhoto} alt="Captured preview" className="w-full h-full object-cover" />
